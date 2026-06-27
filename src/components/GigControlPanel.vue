@@ -547,18 +547,22 @@ export default {
   margin: 5px;
 }
 .presetControl {
-  padding: 5px;
-  margin: 5px;
+  padding: 4px;
+  margin: 5px 9px;
   border: 2px solid transparent;
+  width: calc(100% - 18px);
 }
 .presetControlSelected {
   position: relative;
   isolation: isolate;
   overflow: visible;
-  padding: 5px;
-  margin: 5px;
+  padding: 4px;
+  margin: 5px 9px;
   border: 4px solid #0b3f9f !important;
+  background-color: rgba(8, 8, 10, 1) !important;
+  background-clip: padding-box;
   box-shadow: none !important;
+  width: calc(100% - 18px);
   /* box-shadow: 0px 1px 5px 0px; */
   /* color: blue !important; */
 }
@@ -566,8 +570,8 @@ export default {
 .presetControlSelected::after {
   content: "";
   position: absolute;
-  inset: -3px;
-  transform: translate(8px, 10px);
+  inset: 2px;
+  transform: translate(4px, 5px);
   border-radius: 8px;
   background: linear-gradient(
     135deg,
@@ -576,8 +580,8 @@ export default {
     rgba(66, 165, 245, 0.5) 72%,
     rgba(66, 165, 245, 0) 100%
   );
-  filter: blur(9px);
-  opacity: 0.95;
+  filter: blur(5px);
+  opacity: 0.72;
   pointer-events: none;
   z-index: -1;
 }
@@ -612,7 +616,8 @@ export default {
   text-justify: auto;
   color: #ffffff;
   border: 4px solid #0b3f9f !important;
-  background: linear-gradient(145deg, rgba(3, 14, 42, 0.95), rgba(13, 71, 161, 0.72));
+  background-color: rgba(8, 8, 10, 1);
+  background-clip: padding-box;
   box-shadow: none !important;
   border-radius: 10px;
 
@@ -628,8 +633,8 @@ export default {
 .progLabelSelected::after {
   content: "";
   position: absolute;
-  inset: -3px;
-  transform: translate(6px, 8px);
+  inset: 2px;
+  transform: translate(3px, 4px);
   border-radius: 10px;
   background: linear-gradient(
     135deg,
@@ -638,8 +643,8 @@ export default {
     rgba(66, 165, 245, 0.48) 72%,
     rgba(66, 165, 245, 0) 100%
   );
-  filter: blur(8px);
-  opacity: 0.95;
+  filter: blur(4px);
+  opacity: 0.72;
   pointer-events: none;
   z-index: -1;
 }

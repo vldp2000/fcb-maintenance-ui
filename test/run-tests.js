@@ -1532,6 +1532,9 @@ function testLiveSelectionUsesBlurredGradientShadow () {
     assert(source.includes('filter: blur('), `${file} should blur the gradient glow`)
     assert(source.includes('rgba(11, 63, 159'), `${file} should start the glow from the selected border blue`)
     assert(source.includes('rgba(66, 165, 245'), `${file} should fade the glow toward a lighter blue`)
+    assert(source.includes('background-color: rgba(8, 8, 10, 1)'), `${file} should keep selected card interiors dark over the glow`)
+    assert(source.includes('inset: 2px;'), `${file} should keep the glow outside the selected card interior`)
+    assert(source.includes('filter: blur(5px);'), `${file} should keep selected preset glow narrow`)
     assert(source.includes('box-shadow: none !important;'), `${file} should avoid stacked box-shadow rings for selected glow`)
   }
 }

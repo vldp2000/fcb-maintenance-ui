@@ -476,18 +476,20 @@ export default {
     display: flex;
     margin: 0px;
     padding: 0px;
-    /* justify-content: flex-start; */
-    /* align-items: flex-end; */
+    margin-left: -4px;
+    text-align: left;
+    justify-content: flex-start;
+    align-items: flex-start;
     flex-direction: column;
     height: 40px;
   }
   .effectToggleGrid {
     display: grid;
-    grid-template-columns: 58px 48px;
+    grid-template-columns: 50px 42px;
     grid-template-rows: 24px 24px;
-    column-gap: 4px;
+    column-gap: 0px;
     row-gap: 2px;
-    margin-left: 6px;
+    margin-left: 4px;
     margin-top: 20px;
     align-items: center;
   }
@@ -500,8 +502,11 @@ export default {
   }
   .checkbox label {
     font-size: 10px!important;
-    margin-left: -8px!important;
+    margin-left: -10px!important;
     padding: 0px!important;
+  }
+  .checkbox .v-input--selection-controls__input {
+    margin-right: 0px!important;
   }
 
   .view-mode {
