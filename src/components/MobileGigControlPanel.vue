@@ -421,11 +421,13 @@ export default {
 .presetControl {
   padding: 5px;
   margin: 5px;
+  border: 2px solid transparent;
 }
 .presetControlSelected {
   padding: 5px;
   margin: 5px;
-  box-shadow: 1px 4px 8px 1px rgba(5, 79, 218, 0.83);
+  border: 2px solid #42a5f5;
+  box-shadow: 0 0 0 1px rgba(66, 165, 245, 0.95), 0 0 12px rgba(66, 165, 245, 0.75);
 }
 .darkBackgroud {
   background-color:rgba(12, 12, 12, 0.884)
@@ -434,8 +436,9 @@ export default {
 .progLabel {
   text-align: center;
   text-justify: auto;
-  color:black;
-  border: 2px solid black;
+  color: #9e9e9e;
+  border: 2px solid #424242;
+  background-color: rgba(0, 0, 0, 0.35);
   border-radius: 10px;
   width: 50px;
   height: 50px;
@@ -448,8 +451,10 @@ export default {
 .progLabelSelected {
   text-align: center;
   text-justify: auto;
-  color: blue;
-  border: 2px solid blue;
+  color: #ffffff;
+  border: 2px solid #42a5f5;
+  background-color: rgba(25, 118, 210, 0.55);
+  box-shadow: 0 0 10px rgba(66, 165, 245, 0.85);
   border-radius: 10px;
   width: 50px;
   height: 50px;
@@ -481,12 +486,12 @@ export default {
 }
 .selectSongButton {
   margin-left: 10px;
-  color: blue;
+  color: #90caf9;
 }
 .defaultGigHighighted {
   margin-left: -10px;
   margin-top: 5px;
-  color: blue;
+  color: #ffca28;
   font-size: 36px;
 }
 </style>

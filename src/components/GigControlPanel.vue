@@ -549,11 +549,13 @@ export default {
 .presetControl {
   padding: 5px;
   margin: 5px;
+  border: 2px solid transparent;
 }
 .presetControlSelected {
   padding: 5px;
   margin: 5px;
-  box-shadow: 1px 4px 8px 1px rgba(5, 79, 218, 0.83);
+  border: 2px solid #42a5f5;
+  box-shadow: 0 0 0 1px rgba(66, 165, 245, 0.95), 0 0 12px rgba(66, 165, 245, 0.75);
   /* box-shadow: 0px 1px 5px 0px; */
   /* color: blue !important; */
 }
@@ -566,8 +568,9 @@ export default {
 .progLabel {
   text-align: center;
   text-justify: auto;
-  color:black;
-  border: 2px solid black;
+  color: #9e9e9e;
+  border: 2px solid #424242;
+  background-color: rgba(0, 0, 0, 0.35);
   border-radius: 10px;
 
   width: 50px;
@@ -582,8 +585,10 @@ export default {
 .progLabelSelected {
   text-align: center;
   text-justify: auto;
-  color: blue;
-  border: 2px solid blue;
+  color: #ffffff;
+  border: 2px solid #42a5f5;
+  background-color: rgba(25, 118, 210, 0.55);
+  box-shadow: 0 0 10px rgba(66, 165, 245, 0.85);
   border-radius: 10px;
 
   width: 50px;
@@ -614,31 +619,31 @@ export default {
 }
 
 .saveSongButtonHighighted {
-  color: darkblue;
+  color: #ffca28;
 }
 .saveSongButton {
-  color:  rgb(103, 103, 109);
+  color: #b0bec5;
 }
 .selectSongButton {
   margin-left: 10px;
-  color: darkblue;
+  color: #90caf9;
 }
 .defaultGigHighighted {
   margin-left: -10px;
   margin-top: 5px;
-  color: darkblue;
+  color: #ffca28;
   font-size: 36px;
 }
 .defaultGig {
   margin-left: -10px;
   margin-top: 5px;
-  color: rgb(103, 103, 109);
+  color: #b0bec5;
   font-size: 36px;
 }
 .clearGigBbutton {
   margin-left: 10px;
   margin-top: 5px;
-  color: rgb(103, 103, 109);
+  color: #b0bec5;
   font-size: 36px;
 }
 .programTytle {
