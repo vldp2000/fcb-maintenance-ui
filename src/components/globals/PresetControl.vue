@@ -475,19 +475,19 @@ export default {
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    height: 36px;
+    height: 40px;
   }
   .presetName {
     display: flex;
     margin: 0px;
     padding: 0px;
-    padding-top: 9px;
-    margin-left: 13px;
+    padding-top: 12px;
+    margin-left: 10px;
     text-align: left;
     justify-content: flex-start;
     align-items: flex-start;
     flex-direction: column;
-    height: 36px;
+    height: 40px;
   }
   .effectToggleGrid {
     display: grid;
@@ -495,15 +495,18 @@ export default {
     grid-template-rows: 24px 24px;
     column-gap: 2px;
     row-gap: 2px;
-    margin-left: 4px;
+    margin-left: 12px;
     margin-top: 3px;
     align-items: center;
+  }
+  .effectToggleGrid .checkbox:nth-child(odd) {
+    margin-left: 6px!important;
   }
   .instrumentImage {
     height: 40px;
     width: 40px;
-    margin-top: 10px;
-    margin-left: 10px;
+    margin-top: 12px;
+    margin-left: 14px;
     padding-bottom: -5px;
   }
   .checkbox label {
