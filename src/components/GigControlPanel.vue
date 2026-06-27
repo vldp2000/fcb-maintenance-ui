@@ -554,11 +554,11 @@ export default {
 .presetControlSelected {
   padding: 5px;
   margin: 5px;
-  border: 3px solid #082b74;
+  border: 4px solid #0b3f9f !important;
   box-shadow:
-    2px 3px 0 rgba(4, 14, 45, 0.95),
-    5px 7px 8px rgba(8, 43, 116, 0.82),
-    8px 11px 16px rgba(33, 150, 243, 0.42);
+    3px 4px 0 rgba(2, 8, 32, 0.95),
+    7px 9px 8px rgba(8, 43, 116, 0.92),
+    11px 14px 18px rgba(33, 150, 243, 0.7) !important;
   /* box-shadow: 0px 1px 5px 0px; */
   /* color: blue !important; */
 }
@@ -589,12 +589,12 @@ export default {
   text-align: center;
   text-justify: auto;
   color: #ffffff;
-  border: 3px solid #082b74;
+  border: 4px solid #0b3f9f !important;
   background: linear-gradient(145deg, rgba(3, 14, 42, 0.95), rgba(13, 71, 161, 0.72));
   box-shadow:
-    2px 3px 0 rgba(4, 14, 45, 0.95),
-    5px 7px 8px rgba(8, 43, 116, 0.82),
-    8px 11px 14px rgba(33, 150, 243, 0.38);
+    3px 4px 0 rgba(2, 8, 32, 0.95),
+    7px 9px 8px rgba(8, 43, 116, 0.92),
+    11px 14px 16px rgba(33, 150, 243, 0.68) !important;
   border-radius: 10px;
 
   width: 50px;

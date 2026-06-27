@@ -136,7 +136,7 @@ export default {
 
   data: () => ({
     drawer: null,
-    appVersion: process.env.npm_package_version || '2.1.0',
+    appVersion: process.env.VUE_APP_VERSION || '0.0.0',
     items: [
       { icon: 'mdi-desktop-classic', text: 'gigcontrol', link: '/gigcontrol' },
       { icon: 'mdi-chevron-up',
@@ -161,7 +161,7 @@ export default {
   computed: {
     ...mapState(['allInitialized', 'initialisingIsInProgress']),
     appVersionLabel () {
-      return this.appVersion.replace(/\.0$/, '')
+      return this.appVersion
     }
   },
 

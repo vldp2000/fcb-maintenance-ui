@@ -19,8 +19,12 @@ if (process.env.NODE_ENV === 'production') {
     updatefound () {
       this.$log.debug('New content is downloading.')
     },
-    updated () {
-      this.$log.debug('New content is available; please refresh.')
+    updated (registration) {
+      this.$log.debug('New content is available; refreshing.')
+      if (registration && registration.waiting) {
+        registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+      }
+      window.location.reload()
     },
     offline () {
       this.$log.debug('No internet connection found. App is running in offline mode.')
