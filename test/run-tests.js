@@ -1398,6 +1398,7 @@ async function testGigControlPanelDropsUnsavedStateOnSongChange () {
 function testGigControlPanelRoutesPedalHighlightsByInstrumentSlot () {
   const source = readSrcFile('components/GigControlPanel.vue')
   const mobileSource = readSrcFile('components/MobileGigControlPanel.vue')
+  const presetControlSource = readSrcFile('components/globals/PresetControl.vue')
   const expected = [
     ":activeVolumePedal='checkVolumePedal1(0, 1)'",
     ":activeVolumePedal='checkVolumePedal2(0, 1)'",
@@ -1416,6 +1417,10 @@ function testGigControlPanelRoutesPedalHighlightsByInstrumentSlot () {
 
   assert(source.includes('songReloadPending: false'), 'GigControlPanel.vue should track when saved changes need controller reload')
   assert(source.includes("v-bind:class=\"(songReloadPending) ? 'songActionButtonActive selectSongButtonHighighted'"), 'GigControlPanel.vue should highlight reload after save')
+  assert(source.includes('class="songActionPanel"'), 'GigControlPanel.vue should keep save and reload buttons side by side')
+  assert(source.includes('display: flex;'), 'GigControlPanel.vue should use flex layout for top action buttons')
+  assert(!source.includes('programTytle'), 'GigControlPanel.vue should not render old vertical program title labels')
+  assert(presetControlSource.includes('class="presetHeader"'), 'PresetControl.vue should align instrument icon and preset name in one header row')
 
   const firstRow = source.slice(source.indexOf('id="Proram0"'), source.indexOf('id="Proram1"'))
   assert(firstRow.indexOf("checkVolumePedal1(0, 1)") < firstRow.indexOf("checkVolumePedal2(0, 1)"))

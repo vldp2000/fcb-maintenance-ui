@@ -37,7 +37,7 @@
            </metronome>
         </div>
       </v-col>
-      <v-col cols="12" md="5">
+      <v-col cols="12" md="4">
         <v-select
           dark
           v-if="currentSongList"
@@ -49,8 +49,8 @@
           item-value="id">
         </v-select>
       </v-col>
-       <v-col cols="12" md="1">
-        <div>
+       <v-col cols="12" md="2">
+        <div class="songActionPanel">
           <v-icon medium
             v-bind:class="(dataChanged) ? 'songActionButtonActive saveSongButtonHighighted' : 'songActionButtonInactive saveSongButton'"
             @click="saveSong()"
@@ -72,9 +72,6 @@
 
       <div id="Proram0" v-bind:class="(currentProgramIdx === 0) ? 'progLabelSelected' : 'progLabel'" @click="onProgramClick(0)">
         <h1>1</h1>
-      </div>
-      <div class="programTytle">
-        <b>{{ getProgramTytle(0) }}</b>
       </div>
       <v-col md3 d-flex>
         <v-card  dark v-bind:class="(currentProgramIdx === 0) ? 'presetControlSelected' : 'presetControl'">
@@ -120,9 +117,6 @@
       <div id="Proram1" v-bind:class="(currentProgramIdx === 1) ? 'progLabelSelected' : 'progLabel'" @click="onProgramClick(1)" >
         <h1>2</h1>
       </div>
-      <div class="programTytle">
-        <b>{{ getProgramTytle(1) }}</b>
-      </div>
       <v-col md3 d-flex>
         <v-card  dark v-bind:class="(currentProgramIdx === 1) ? 'presetControlSelected' : 'presetControl'">
           <preset-control
@@ -167,9 +161,6 @@
       <div id="Proram2"  v-bind:class="(currentProgramIdx === 2) ? 'progLabelSelected' : 'progLabel'" @click="onProgramClick(2)">
         <h1>3</h1>
       </div>
-      <div class="programTytle">
-        <b>{{ getProgramTytle(2) }}</b>
-      </div>
       <v-col md3 d-flex>
         <v-card  dark v-bind:class="(currentProgramIdx === 2) ? 'presetControlSelected' : 'presetControl'">
           <preset-control
@@ -213,9 +204,6 @@
 
       <div id="Proram3"  v-bind:class="(currentProgramIdx === 3) ? 'progLabelSelected' : 'progLabel'" @click="onProgramClick(3)">
         <h1>4</h1>
-      </div>
-      <div class="programTytle">
-        <b>{{ getProgramTytle(3) }}</b>
       </div>
       <v-col md3 d-flex>
         <v-card  dark v-bind:class="(currentProgramIdx === 3) ? 'presetControlSelected' : 'presetControl'">
@@ -586,9 +574,9 @@ export default {
 .progLabel {
   text-align: center;
   text-justify: auto;
-  color: #9e9e9e;
-  border: 2px solid #424242;
-  background-color: rgba(0, 0, 0, 0.35);
+  color: #455a64;
+  border: 2px solid #263238;
+  background-color: rgba(8, 8, 10, 0.88);
   border-radius: 10px;
 
   width: 50px;
@@ -644,6 +632,14 @@ export default {
   padding-right: 20px;
 }
 
+.songActionPanel {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+  min-width: 112px;
+}
 .songActionButtonInactive,
 .songActionButtonActive {
   width: 48px;
@@ -654,6 +650,7 @@ export default {
   border: 2px solid #263238;
   background-color: rgba(8, 8, 10, 0.88);
   font-size: 26px !important;
+  flex: 0 0 48px;
 }
 .songActionButtonInactive {
   color: #455a64;
@@ -695,33 +692,6 @@ export default {
   color: #b0bec5;
   font-size: 36px;
 }
-.programTytle {
-
-  -ms-transform: rotate(-90deg);
-  -moz-transform: rotate(-90deg);
-  -webkit-transform: rotate(-90deg);
-  transform: rotate(-90deg);
-  filter: none; /* Mandatory for IE9 to show the vertical text correctly */
-  margin-top: 110px;
-  margin-left: 5px;
-  padding-left: 10px;
-  padding-top: 5px;
-  width: 10px;
-  color: rgb(99, 98, 96);
-  -ms-transform-origin: center center 0;
-  -moz-transform-origin: center center 0;
-  -webkit-transform-origin: center center  0;
-  transform-origin: center center 0;
-  display: block;
-  position: relative;
-  text-align: center;
-  white-space: nowrap !important;
-  font-size: 14px;
-/*
-  border: 1px solid red; */
-  /* transform-origin:left top; */
-}
-
 .rotated {
   /* border: 1px solid red;
   writing-mode: sideways-lr;

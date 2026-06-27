@@ -5,29 +5,25 @@
     max-width="400"
   >
     <v-container v-bind:class="(editMode) ? 'edit-mode ma-0 pa-0' : 'view-mode ma-0 pa-0'" fluid>
-      <v-row no-gutters>
-          <v-col cols=2>
-            <div class="instrumentImage">
-              <v-img :src="imageURL" @click="onIconClick()"/>
-            </div>
-            <div class="saveSongPreset()">
-              <v-icon
-                v-if="editMode"
-                class="mr-2 ma-0 pa-0"
-                @click="saveSongPreset()"
-              >
-              save
-              </v-icon>
-            </div>
-          </v-col>
-          <v-col cols=10>
-            <div class="presetName"
-              v-bind:class="(volume > 0) ? 'active' : 'inactive'"
-              @click="onPresetClick()">
-              <b>{{ getPresetName() }}</b>
-            </div>
-          </v-col>
-      </v-row>
+      <div class="presetHeader">
+        <div class="instrumentImage">
+          <v-img :src="imageURL" @click="onIconClick()"/>
+        </div>
+        <div class="saveSongPreset()">
+          <v-icon
+            v-if="editMode"
+            class="mr-2 ma-0 pa-0"
+            @click="saveSongPreset()"
+          >
+          save
+          </v-icon>
+        </div>
+        <div class="presetName"
+          v-bind:class="(volume > 0) ? 'active' : 'inactive'"
+          @click="onPresetClick()">
+          <b>{{ getPresetName() }}</b>
+        </div>
+      </div>
 
       <v-row no-gutters>
         <div class="customKnob">
@@ -475,17 +471,23 @@ export default {
   .inactive {
     color:gray
   }
+  .presetHeader {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    height: 36px;
+  }
   .presetName {
     display: flex;
     margin: 0px;
     padding: 0px;
-    padding-top: 7px;
-    margin-left: 0px;
+    padding-top: 9px;
+    margin-left: 13px;
     text-align: left;
     justify-content: flex-start;
     align-items: flex-start;
     flex-direction: column;
-    height: 34px;
+    height: 36px;
   }
   .effectToggleGrid {
     display: grid;
@@ -494,14 +496,14 @@ export default {
     column-gap: 2px;
     row-gap: 2px;
     margin-left: 4px;
-    margin-top: 2px;
+    margin-top: 3px;
     align-items: center;
   }
   .instrumentImage {
     height: 40px;
     width: 40px;
-    margin-top: 8px;
-    margin-left: 8px;
+    margin-top: 10px;
+    margin-left: 10px;
     padding-bottom: -5px;
   }
   .checkbox label {
