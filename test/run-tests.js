@@ -1523,6 +1523,19 @@ function testPresetControlUsesCompactEffectToggleGrid () {
   assert(delIndex > revIndex && modIndex > delIndex, 'PresetControl.vue should render Del then Mod in the bottom row')
 }
 
+function testLiveSelectionUsesBlurredGradientShadow () {
+  for (const file of ['components/GigControlPanel.vue', 'components/MobileGigControlPanel.vue']) {
+    const source = readSrcFile(file)
+
+    assert(source.includes('.presetControlSelected::after'), `${file} should use a pseudo-element for selected preset glow`)
+    assert(source.includes('.progLabelSelected::after'), `${file} should use a pseudo-element for selected program glow`)
+    assert(source.includes('filter: blur('), `${file} should blur the gradient glow`)
+    assert(source.includes('rgba(11, 63, 159'), `${file} should start the glow from the selected border blue`)
+    assert(source.includes('rgba(66, 165, 245'), `${file} should fade the glow toward a lighter blue`)
+    assert(source.includes('box-shadow: none !important;'), `${file} should avoid stacked box-shadow rings for selected glow`)
+  }
+}
+
 async function run () {
   const tests = [
     testValidateSongAcceptsValidSong,
@@ -1563,7 +1576,8 @@ async function run () {
     testPresetBankAutoSelectUsesFirstMatchingBank,
     testModulationEffectIsLabeledModInLiveUi,
     testBoostFlagReplacesMuteInPresetUi,
-    testPresetControlUsesCompactEffectToggleGrid
+    testPresetControlUsesCompactEffectToggleGrid,
+    testLiveSelectionUsesBlurredGradientShadow
   ]
 
   const failures = []
