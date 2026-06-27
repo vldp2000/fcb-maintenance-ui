@@ -1364,6 +1364,10 @@ async function testGigControlPanelBusinessMethods () {
     { type: 'updateSong', payload: songA }
   ])
   assert.strictEqual(context.dataChanged, false)
+  assert.strictEqual(context.songReloadPending, true)
+
+  context.selectSong()
+  assert.strictEqual(context.songReloadPending, false)
 
   await context.setGigSong()
   assert.deepStrictEqual(context.dispatches.at(-1), { type: 'setSelectedGigId', payload: 1 })
@@ -1373,8 +1377,27 @@ async function testGigControlPanelBusinessMethods () {
   assert.deepStrictEqual(context.dispatches.at(-1), { type: 'setSelectedGigId', payload: -1 })
 }
 
+async function testGigControlPanelDropsUnsavedStateOnSongChange () {
+  const component = loadVueComponent('components/GigControlPanel.vue')
+  const context = makeComponentContext(component, {
+    currentSongId: 10,
+    currentSong: { id: 9 },
+    currentSongList: [{ id: 10, programList: [] }],
+    dataChanged: true,
+    songReloadPending: true
+  })
+
+  component.computed.songId.set.call(context, 11)
+  assert.deepStrictEqual(context.dispatches.at(-1), { type: 'setCurrentSongId', payload: 11 })
+
+  await component.watch.currentSongId.call(context)
+  assert.strictEqual(context.dataChanged, false)
+  assert.strictEqual(context.songReloadPending, false)
+}
+
 function testGigControlPanelRoutesPedalHighlightsByInstrumentSlot () {
   const source = readSrcFile('components/GigControlPanel.vue')
+  const mobileSource = readSrcFile('components/MobileGigControlPanel.vue')
   const expected = [
     ":activeVolumePedal='checkVolumePedal1(0, 1)'",
     ":activeVolumePedal='checkVolumePedal2(0, 1)'",
@@ -1385,6 +1408,14 @@ function testGigControlPanelRoutesPedalHighlightsByInstrumentSlot () {
   for (let pattern of expected) {
     assert(source.includes(pattern), `GigControlPanel.vue should route active pedal highlight with ${pattern}`)
   }
+
+  for (let label of ['<h1>1</h1>', '<h1>2</h1>', '<h1>3</h1>', '<h1>4</h1>']) {
+    assert(source.includes(label), `GigControlPanel.vue should label program buttons with FCB1010 button ${label}`)
+    assert(mobileSource.includes(label), `MobileGigControlPanel.vue should label program buttons with FCB1010 button ${label}`)
+  }
+
+  assert(source.includes('songReloadPending: false'), 'GigControlPanel.vue should track when saved changes need controller reload')
+  assert(source.includes("v-bind:class=\"(songReloadPending) ? 'songActionButtonActive selectSongButtonHighighted'"), 'GigControlPanel.vue should highlight reload after save')
 
   const firstRow = source.slice(source.indexOf('id="Proram0"'), source.indexOf('id="Proram1"'))
   assert(firstRow.indexOf("checkVolumePedal1(0, 1)") < firstRow.indexOf("checkVolumePedal2(0, 1)"))
@@ -1565,6 +1596,7 @@ async function run () {
     testPresetsPanelBusinessMethods,
     testPresetControlBusinessMethods,
     testGigControlPanelBusinessMethods,
+    testGigControlPanelDropsUnsavedStateOnSongChange,
     testGigControlPanelRoutesPedalHighlightsByInstrumentSlot,
     testMyKnobValueWatcherIsImmediateAndNormalizesValues,
     testVueComponentsUseLengthProperty,

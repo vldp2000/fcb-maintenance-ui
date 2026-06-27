@@ -51,13 +51,14 @@
       </v-col>
        <v-col cols="12" md="1">
         <div>
-          <v-icon large
-            v-bind:class="(dataChanged) ? 'saveSongButtonHighighted' : 'saveSongButton'"
+          <v-icon medium
+            v-bind:class="(dataChanged) ? 'songActionButtonActive saveSongButtonHighighted' : 'songActionButtonInactive saveSongButton'"
             @click="saveSong()"
           >
           save
           </v-icon>
-          <v-icon large class="selectSongButton"
+          <v-icon medium
+            v-bind:class="(songReloadPending) ? 'songActionButtonActive selectSongButtonHighighted' : 'songActionButtonInactive selectSongButton'"
             @click="selectSong()"
           >
           settings_remote
@@ -70,7 +71,7 @@
     <v-row md12 ma-0 pa-0 no-gutters>
 
       <div id="Proram0" v-bind:class="(currentProgramIdx === 0) ? 'progLabelSelected' : 'progLabel'" @click="onProgramClick(0)">
-        <h1>A</h1>
+        <h1>1</h1>
       </div>
       <div class="programTytle">
         <b>{{ getProgramTytle(0) }}</b>
@@ -117,7 +118,7 @@
     <v-row md12 ma-0 pa-0 no-gutters>
 
       <div id="Proram1" v-bind:class="(currentProgramIdx === 1) ? 'progLabelSelected' : 'progLabel'" @click="onProgramClick(1)" >
-        <h1>B</h1>
+        <h1>2</h1>
       </div>
       <div class="programTytle">
         <b>{{ getProgramTytle(1) }}</b>
@@ -164,7 +165,7 @@
     <v-row md12 ma-0 pa-0 no-gutters>
 
       <div id="Proram2"  v-bind:class="(currentProgramIdx === 2) ? 'progLabelSelected' : 'progLabel'" @click="onProgramClick(2)">
-        <h1>C</h1>
+        <h1>3</h1>
       </div>
       <div class="programTytle">
         <b>{{ getProgramTytle(2) }}</b>
@@ -211,7 +212,7 @@
     <v-row md12 no-gutters>
 
       <div id="Proram3"  v-bind:class="(currentProgramIdx === 3) ? 'progLabelSelected' : 'progLabel'" @click="onProgramClick(3)">
-        <h1>D</h1>
+        <h1>4</h1>
       </div>
       <div class="programTytle">
         <b>{{ getProgramTytle(3) }}</b>
@@ -278,6 +279,7 @@ export default {
       currentSongList: [],
       initFlag: true,
       dataChanged: false,
+      songReloadPending: false,
       currentPedal1Value: 1,
       currentPedal2Value: 1,
       isPlaying: false
@@ -359,6 +361,8 @@ export default {
     },
 
     currentSongId: async function () {
+      this.dataChanged = false
+      this.songReloadPending = false
       if (!this.currentSong || this.currentSong.id !== this.currentSongId) {
         this.setCurrentSong()
       }
@@ -385,6 +389,7 @@ export default {
   methods: {
     OnControlDataChanged () {
       this.dataChanged = true
+      this.songReloadPending = false
     },
 
     async setCurrentSong () {
@@ -427,6 +432,7 @@ export default {
     selectSong () {
       try {
         this.$store.dispatch('selectSong', this.currentSongId)
+        this.songReloadPending = false
       } catch (ex) {
         this.$log.error(ex)
       }
@@ -536,6 +542,7 @@ export default {
     saveSong () {
       this.$store.dispatch('updateSong', this.currentSong)
       this.dataChanged = false
+      this.songReloadPending = true
     }
   }
 }
@@ -619,7 +626,7 @@ export default {
   content: none;
 }
 .selector-panel {
-  height: 45px;
+  height: 52px;
 }
 .v-select  {
   color: azure;
@@ -637,15 +644,38 @@ export default {
   padding-right: 20px;
 }
 
+.songActionButtonInactive,
+.songActionButtonActive {
+  width: 48px;
+  height: 48px;
+  margin-left: 8px;
+  margin-top: 1px;
+  border-radius: 10px;
+  border: 2px solid #263238;
+  background-color: rgba(8, 8, 10, 0.88);
+  font-size: 26px !important;
+}
+.songActionButtonInactive {
+  color: #455a64;
+  box-shadow: none;
+}
+.songActionButtonActive {
+  border: 4px solid #0b3f9f;
+  background-color: rgba(8, 8, 10, 1);
+  color: #ffffff;
+  box-shadow: 4px 5px 7px -2px rgba(35, 116, 221, 0.7);
+}
 .saveSongButtonHighighted {
   color: #ffca28;
 }
 .saveSongButton {
-  color: #b0bec5;
+  color: #455a64;
+}
+.selectSongButtonHighighted {
+  color: #90caf9;
 }
 .selectSongButton {
-  margin-left: 10px;
-  color: #90caf9;
+  color: #455a64;
 }
 .defaultGigHighighted {
   margin-left: -10px;

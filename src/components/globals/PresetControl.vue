@@ -456,8 +456,11 @@ export default {
   .customKnob {
     height: 60px;
     width: 60px;
-    margin-top: 15px;
+    margin-top: 8px;
     margin-right: 5px;
+  }
+  .customKnob:first-child {
+    margin-left: 9px;
   }
   .customControls {
     height: 60px;
@@ -476,12 +479,13 @@ export default {
     display: flex;
     margin: 0px;
     padding: 0px;
-    margin-left: -4px;
+    padding-top: 7px;
+    margin-left: 0px;
     text-align: left;
     justify-content: flex-start;
     align-items: flex-start;
     flex-direction: column;
-    height: 40px;
+    height: 34px;
   }
   .effectToggleGrid {
     display: grid;
@@ -490,14 +494,14 @@ export default {
     column-gap: 2px;
     row-gap: 2px;
     margin-left: 4px;
-    margin-top: 20px;
+    margin-top: 2px;
     align-items: center;
   }
   .instrumentImage {
     height: 40px;
     width: 40px;
-    margin-top: 5px;
-    margin-left: 5px;
+    margin-top: 8px;
+    margin-left: 8px;
     padding-bottom: -5px;
   }
   .checkbox label {

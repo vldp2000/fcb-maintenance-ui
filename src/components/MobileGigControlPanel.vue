@@ -39,7 +39,7 @@
     <v-row md12 ma-0 pa-0 no-gutters>
 
       <div id="Proram0" v-bind:class="(currentProgramIdx === 0) ? 'progLabelSelected' : 'progLabel'" @click="onProgramClick(0)">
-        <h1>A</h1>
+        <h1>1</h1>
       </div>
       <v-col md3 d-flex>
         <v-card  dark v-bind:class="(currentProgramIdx === 0) ? 'presetControlSelected' : 'presetControl'">
@@ -75,7 +75,7 @@
     <v-row md12 ma-0 pa-0 no-gutters>
 
       <div id="Proram1" v-bind:class="(currentProgramIdx === 1) ? 'progLabelSelected' : 'progLabel'" @click="onProgramClick(1)" >
-        <h1>B</h1>
+        <h1>2</h1>
       </div>
       <v-col md3 d-flex>
         <v-card  dark v-bind:class="(currentProgramIdx === 1) ? 'presetControlSelected' : 'presetControl'">
@@ -111,7 +111,7 @@
     <v-row md12 ma-0 pa-0 no-gutters>
 
       <div id="Proram2"  v-bind:class="(currentProgramIdx === 2) ? 'progLabelSelected' : 'progLabel'" @click="onProgramClick(2)">
-        <h1>C</h1>
+        <h1>3</h1>
       </div>
       <v-col md3 d-flex>
         <v-card  dark v-bind:class="(currentProgramIdx === 2) ? 'presetControlSelected' : 'presetControl'">
@@ -147,7 +147,7 @@
     <v-row md12 no-gutters>
 
       <div id="Proram3"  v-bind:class="(currentProgramIdx === 3) ? 'progLabelSelected' : 'progLabel'" @click="onProgramClick(3)">
-        <h1>D</h1>
+        <h1>4</h1>
       </div>
       <v-col md3 d-flex>
         <v-card  dark v-bind:class="(currentProgramIdx === 3) ? 'presetControlSelected' : 'presetControl'">
