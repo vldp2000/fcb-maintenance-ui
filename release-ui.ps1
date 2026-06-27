@@ -53,7 +53,7 @@ try {
   }
 
   Get-ChildItem -Force |
-    Where-Object { $_.Name -ne ".git" } |
+    Where-Object { $_.Name -notin @(".git", "deploy-to-rpi.sh", "README.md") } |
     Remove-Item -Recurse -Force
 
   Copy-Item -Path (Join-Path $distPath "*") -Destination $DistRepoPath -Recurse -Force
