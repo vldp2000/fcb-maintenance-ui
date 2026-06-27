@@ -16,6 +16,9 @@ if ($sourceChanges -and !$AllowDirty) {
   throw "Source tree has uncommitted changes. Commit them first, or rerun with -AllowDirty."
 }
 
+$packageJson = Get-Content -Raw -Path (Join-Path $uiRoot "package.json") | ConvertFrom-Json
+$appVersion = $packageJson.version
+
 Write-Host "Building maintenance UI..."
 Push-Location $uiRoot
 try {
@@ -65,6 +68,7 @@ try {
   $builtAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 
   $version = [ordered]@{
+    appVersion = $appVersion
     sourceRepository = "fcb-maintenance-ui"
     sourceBranch = $sourceBranch
     sourceCommit = $sourceCommit

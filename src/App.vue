@@ -89,10 +89,10 @@
     >
       <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
       <v-toolbar-title
-        style="width: 300px"
+        style="width: 360px"
         class="ml-0 pl-4"
       >
-        <span>Midi Gig Manager</span>
+        <span>Midi Gig Manager ver.{{ appVersionLabel }}</span>
       </v-toolbar-title>
 
       <!-- <v-text-field
@@ -136,6 +136,7 @@ export default {
 
   data: () => ({
     drawer: null,
+    appVersion: process.env.npm_package_version || '2.1.0',
     items: [
       { icon: 'mdi-desktop-classic', text: 'gigcontrol', link: '/gigcontrol' },
       { icon: 'mdi-chevron-up',
@@ -158,7 +159,10 @@ export default {
   },
 
   computed: {
-    ...mapState(['allInitialized', 'initialisingIsInProgress'])
+    ...mapState(['allInitialized', 'initialisingIsInProgress']),
+    appVersionLabel () {
+      return this.appVersion.replace(/\.0$/, '')
+    }
   },
 
   methods: {
