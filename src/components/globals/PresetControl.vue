@@ -485,9 +485,9 @@ export default {
   }
   .effectToggleGrid {
     display: grid;
-    grid-template-columns: 50px 42px;
+    grid-template-columns: 58px 50px;
     grid-template-rows: 24px 24px;
-    column-gap: 0px;
+    column-gap: 2px;
     row-gap: 2px;
     margin-left: 4px;
     margin-top: 20px;
@@ -502,11 +502,11 @@ export default {
   }
   .checkbox label {
     font-size: 10px!important;
-    margin-left: -10px!important;
+    margin-left: -3px!important;
     padding: 0px!important;
   }
   .checkbox .v-input--selection-controls__input {
-    margin-right: 0px!important;
+    margin-right: 1px!important;
   }
 
   .view-mode {

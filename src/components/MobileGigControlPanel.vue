@@ -433,27 +433,12 @@ export default {
   border: 4px solid #0b3f9f !important;
   background-color: rgba(8, 8, 10, 1) !important;
   background-clip: padding-box;
-  box-shadow: none !important;
+  box-shadow: 5px 6px 8px -2px rgba(35, 116, 221, 0.72) !important;
   width: calc(100% - 18px);
 }
 
 .presetControlSelected::after {
-  content: "";
-  position: absolute;
-  inset: 2px;
-  transform: translate(4px, 5px);
-  border-radius: 8px;
-  background: linear-gradient(
-    135deg,
-    rgba(11, 63, 159, 0.95) 0%,
-    rgba(22, 91, 196, 0.78) 42%,
-    rgba(66, 165, 245, 0.5) 72%,
-    rgba(66, 165, 245, 0) 100%
-  );
-  filter: blur(5px);
-  opacity: 0.72;
-  pointer-events: none;
-  z-index: -1;
+  content: none;
 }
 .darkBackgroud {
   background-color:rgba(12, 12, 12, 0.884)
@@ -484,7 +469,7 @@ export default {
   border: 4px solid #0b3f9f !important;
   background-color: rgba(8, 8, 10, 1);
   background-clip: padding-box;
-  box-shadow: none !important;
+  box-shadow: 4px 5px 7px -2px rgba(35, 116, 221, 0.7) !important;
   border-radius: 10px;
   width: 50px;
   height: 50px;
@@ -495,22 +480,7 @@ export default {
 }
 
 .progLabelSelected::after {
-  content: "";
-  position: absolute;
-  inset: 2px;
-  transform: translate(3px, 4px);
-  border-radius: 10px;
-  background: linear-gradient(
-    135deg,
-    rgba(11, 63, 159, 0.95) 0%,
-    rgba(22, 91, 196, 0.78) 42%,
-    rgba(66, 165, 245, 0.48) 72%,
-    rgba(66, 165, 245, 0) 100%
-  );
-  filter: blur(4px);
-  opacity: 0.72;
-  pointer-events: none;
-  z-index: -1;
+  content: none;
 }
 .selector-panel {
   height: 45px;
