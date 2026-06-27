@@ -428,9 +428,9 @@ export default {
   margin: 5px;
   border: 4px solid #0b3f9f !important;
   box-shadow:
-    3px 4px 0 rgba(2, 8, 32, 0.95),
-    7px 9px 8px rgba(8, 43, 116, 0.92),
-    11px 14px 18px rgba(33, 150, 243, 0.7) !important;
+    3px 4px 0 rgba(11, 63, 159, 0.95),
+    7px 9px 8px rgba(22, 91, 196, 0.82),
+    11px 14px 18px rgba(66, 165, 245, 0.62) !important;
 }
 .darkBackgroud {
   background-color:rgba(12, 12, 12, 0.884)
@@ -458,9 +458,9 @@ export default {
   border: 4px solid #0b3f9f !important;
   background: linear-gradient(145deg, rgba(3, 14, 42, 0.95), rgba(13, 71, 161, 0.72));
   box-shadow:
-    3px 4px 0 rgba(2, 8, 32, 0.95),
-    7px 9px 8px rgba(8, 43, 116, 0.92),
-    11px 14px 16px rgba(33, 150, 243, 0.68) !important;
+    3px 4px 0 rgba(11, 63, 159, 0.95),
+    7px 9px 8px rgba(22, 91, 196, 0.82),
+    11px 14px 16px rgba(66, 165, 245, 0.6) !important;
   border-radius: 10px;
   width: 50px;
   height: 50px;

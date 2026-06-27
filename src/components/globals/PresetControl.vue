@@ -49,54 +49,38 @@
             @doubleclick="onPanKnobDoubleClick()"
           />
         </div>
-        <div class="ma=0 pa=0">
-            <v-checkbox :readonly="!editMode"
-              v-if="volume > 0"
-              class="ma-0 pa-0 checkbox"
-              dense hide-details
-              label="Boost"
-              :disabled="volume == 0"
-              v-model="songPreset.boostflag" />
-            <v-checkbox
-              v-if="volume > 0"
-              :readonly="!editMode"
-              class="ma-0 pa-0 checkbox"
-              dense hide-details
-              label="Del"
-              :disabled="volume == 0"
-              v-model="songPreset.delayflag" />
-            <v-checkbox
-              v-if="volume > 0"
-              :readonly="!editMode"
-              class="ma-0 pa-0 checkbox"
-              dense hide-details
-              label="Rev"
-              :disabled="volume == 0"
-              v-model="songPreset.reverbflag" />
-        </div>
-        <div class="inputpanel">
-          <div>
-            <v-checkbox
-              v-if="volume > 0"
-              :readonly="!editMode"
-              class="ma-0 pa-0 checkbox"
-              dense hide-details
-              label="Mod"
-              :disabled="volume == 0"
-              v-model="songPreset.modeflag" />
-          </div>
-          <div class="valueInput">
-            <custom-text-input
-              v-if="volume > 0"
-              :editMode='editMode'
-              v-model="songPreset.delayvalue" />
-          </div>
-          <div class="valueInput">
-            <custom-text-input
-              v-if="volume > 0"
-              :editMode='editMode'
-              v-model="songPreset.reverbvalue" />
-          </div>
+        <div
+          v-if="volume > 0"
+          class="effectToggleGrid"
+        >
+          <v-checkbox
+            :readonly="!editMode"
+            class="ma-0 pa-0 checkbox"
+            dense hide-details
+            label="Boost"
+            :disabled="volume == 0"
+            v-model="songPreset.boostflag" />
+          <v-checkbox
+            :readonly="!editMode"
+            class="ma-0 pa-0 checkbox"
+            dense hide-details
+            label="Rev"
+            :disabled="volume == 0"
+            v-model="songPreset.reverbflag" />
+          <v-checkbox
+            :readonly="!editMode"
+            class="ma-0 pa-0 checkbox"
+            dense hide-details
+            label="Del"
+            :disabled="volume == 0"
+            v-model="songPreset.delayflag" />
+          <v-checkbox
+            :readonly="!editMode"
+            class="ma-0 pa-0 checkbox"
+            dense hide-details
+            label="Mod"
+            :disabled="volume == 0"
+            v-model="songPreset.modeflag" />
         </div>
           <v-dialog v-if="editMode"  v-model="dialog" persistent max-width="600px">
             <v-card>
@@ -497,14 +481,15 @@ export default {
     flex-direction: column;
     height: 40px;
   }
-  .custom-text-input {
-    width: 65px;
-  }
-  .inputpanel {
-    margin-left: 10px;
-  }
-  .valueInput {
-    width: 80px;
+  .effectToggleGrid {
+    display: grid;
+    grid-template-columns: 58px 48px;
+    grid-template-rows: 24px 24px;
+    column-gap: 4px;
+    row-gap: 2px;
+    margin-left: 6px;
+    margin-top: 20px;
+    align-items: center;
   }
   .instrumentImage {
     height: 40px;
@@ -515,7 +500,7 @@ export default {
   }
   .checkbox label {
     font-size: 10px!important;
-    margin-left: -10px!important;
+    margin-left: -8px!important;
     padding: 0px!important;
   }
 

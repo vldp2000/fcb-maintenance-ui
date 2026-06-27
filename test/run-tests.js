@@ -1507,6 +1507,22 @@ function testBoostFlagReplacesMuteInPresetUi () {
   assert(mutationsSource.includes("Vue.set(preset, 'boostflag'"), 'Existing presets should receive boostflag reactively')
 }
 
+function testPresetControlUsesCompactEffectToggleGrid () {
+  const presetControlSource = readSrcFile('components/globals/PresetControl.vue')
+
+  assert(presetControlSource.includes('class="effectToggleGrid"'), 'PresetControl.vue should group effect toggles in a compact grid')
+  assert(!presetControlSource.includes('<custom-text-input'), 'PresetControl.vue should not render old effect value text inputs')
+  assert(!presetControlSource.includes('class="valueInput"'), 'PresetControl.vue should not keep old effect value input layout')
+
+  const boostIndex = presetControlSource.indexOf('label="Boost"')
+  const revIndex = presetControlSource.indexOf('label="Rev"')
+  const delIndex = presetControlSource.indexOf('label="Del"')
+  const modIndex = presetControlSource.indexOf('label="Mod"')
+
+  assert(boostIndex > -1 && revIndex > boostIndex, 'PresetControl.vue should render Boost then Rev in the top row')
+  assert(delIndex > revIndex && modIndex > delIndex, 'PresetControl.vue should render Del then Mod in the bottom row')
+}
+
 async function run () {
   const tests = [
     testValidateSongAcceptsValidSong,
@@ -1546,7 +1562,8 @@ async function run () {
     testReferenceLookupsDoNotDereferenceMissingItemsInline,
     testPresetBankAutoSelectUsesFirstMatchingBank,
     testModulationEffectIsLabeledModInLiveUi,
-    testBoostFlagReplacesMuteInPresetUi
+    testBoostFlagReplacesMuteInPresetUi,
+    testPresetControlUsesCompactEffectToggleGrid
   ]
 
   const failures = []
