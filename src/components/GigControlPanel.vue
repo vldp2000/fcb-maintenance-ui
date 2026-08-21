@@ -38,18 +38,13 @@
         </div>
       </v-col>
       <v-col cols="12" md="4">
-        <div v-if="currentSongList" class="currentSongPanel">
-          <div class="currentSongLabel">
-            <div class="currentSongCaption">Current Song</div>
-            <div class="currentSongValue">{{ currentSongDisplay }}</div>
-          </div>
-          <v-icon
-            medium
-            class="songPickerButton"
-            @click="openSongPicker()"
-          >
-          queue_music
-          </v-icon>
+        <div
+          v-if="currentSongList"
+          class="currentSongButton"
+          @click="openSongPicker()"
+        >
+          <div class="currentSongCaption">Current Song</div>
+          <div class="currentSongValue">{{ currentSongDisplay }}</div>
         </div>
       </v-col>
        <v-col cols="12" md="2">
@@ -733,21 +728,23 @@ export default {
   padding-right: 20px;
 }
 
-.currentSongPanel {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  margin: 0px 20px 0px 60px;
-}
-.currentSongLabel {
-  flex: 1 1 auto;
-  min-width: 0;
+.currentSongButton {
   height: 48px;
-  padding: 3px 12px;
+  margin: 0px 20px 0px 60px;
+  padding: 3px 14px;
   color: azure;
   text-align: left;
   text-transform: uppercase;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.74);
+  background-color: rgba(8, 8, 10, 0.88);
+  border: 2px solid #263238;
+  border-radius: 10px;
+  box-shadow: none;
+  cursor: pointer;
+}
+.currentSongButton:hover {
+  border-color: #0b3f9f;
+  background-color: rgba(15, 38, 72, 0.88);
+  box-shadow: 4px 5px 7px -2px rgba(35, 116, 221, 0.7);
 }
 .currentSongCaption {
   color: #b0bec5;
@@ -764,22 +761,6 @@ export default {
   text-overflow: ellipsis;
   text-shadow: 1px 1px 1px rgba(5, 79, 218, 0.83);
   white-space: nowrap;
-}
-.songPickerButton {
-  flex: 0 0 48px;
-  width: 48px;
-  height: 48px;
-  margin-left: 8px;
-  color: #90caf9 !important;
-  background-color: rgba(8, 8, 10, 0.88);
-  border: 2px solid #263238;
-  border-radius: 10px;
-  font-size: 26px !important;
-}
-.songPickerButton:hover {
-  border-color: #0b3f9f;
-  background-color: rgba(15, 38, 72, 0.88);
-  box-shadow: 4px 5px 7px -2px rgba(35, 116, 221, 0.7);
 }
 .songPickerPanel {
   position: fixed;

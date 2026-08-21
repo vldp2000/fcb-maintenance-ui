@@ -1451,7 +1451,7 @@ function testGigControlPanelRoutesPedalHighlightsByInstrumentSlot () {
   assert(source.includes('songPickerOpen: false'), 'GigControlPanel.vue should track the floating song picker')
   assert(source.includes('unsavedChangesDialog: false'), 'GigControlPanel.vue should show a warning when selection is blocked by unsaved changes')
   assert(!source.includes('label="Select Song"'), 'GigControlPanel.vue should replace the song combobox with the current song label')
-  assert(source.includes('class="songPickerButton"'), 'GigControlPanel.vue should show a dedicated button for opening the song picker')
+  assert(source.includes('class="currentSongButton"'), 'GigControlPanel.vue should show the current song as a button that opens the song picker')
   assert(source.includes('class="songPickerPanel"'), 'GigControlPanel.vue should render the floating song picker panel')
   assert(source.includes("v-bind:class=\"(songReloadPending) ? 'songActionButtonActive selectSongButtonHighighted'"), 'GigControlPanel.vue should highlight reload after save')
   assert(source.includes('class="songActionPanel"'), 'GigControlPanel.vue should keep save and reload buttons side by side')
