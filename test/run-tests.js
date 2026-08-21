@@ -1326,20 +1326,18 @@ async function testGigControlPanelBusinessMethods () {
   })
   Object.defineProperty(context, 'gigId', {
     get () {
-      return this.selectedGigId
+      return component.computed.gigId.get.call(this)
     },
     set (value) {
-      this.$store.dispatch('setSelectedGigId', value)
+      component.computed.gigId.set.call(this, value)
     }
   })
   Object.defineProperty(context, 'songId', {
     get () {
-      return this.currentSongId
+      return component.computed.songId.get.call(this)
     },
     set (value) {
-      if (this.currentSongId !== value && value > 0) {
-        this.$store.dispatch('setCurrentSongId', value)
-      }
+      component.computed.songId.set.call(this, value)
     }
   })
 
@@ -1377,22 +1375,56 @@ async function testGigControlPanelBusinessMethods () {
   assert.deepStrictEqual(context.dispatches.at(-1), { type: 'setSelectedGigId', payload: -1 })
 }
 
-async function testGigControlPanelDropsUnsavedStateOnSongChange () {
+async function testGigControlPanelBlocksUiSelectionWithUnsavedChanges () {
   const component = loadVueComponent('components/GigControlPanel.vue')
+  const songA = { id: 10, name: 'Song A', tempo: 120, programList: [] }
+  const songB = { id: 11, name: 'Song B', tempo: 100, programList: [] }
   const context = makeComponentContext(component, {
     currentSongId: 10,
-    currentSong: { id: 9 },
-    currentSongList: [{ id: 10, programList: [] }],
+    selectedGigId: 1,
+    currentSong: songA,
+    currentSongList: [songA, songB],
     dataChanged: true,
-    songReloadPending: true
+    songPickerOpen: true
+  })
+  Object.defineProperty(context, 'gigId', {
+    get () {
+      return component.computed.gigId.get.call(this)
+    },
+    set (value) {
+      component.computed.gigId.set.call(this, value)
+    }
+  })
+  Object.defineProperty(context, 'songId', {
+    get () {
+      return component.computed.songId.get.call(this)
+    },
+    set (value) {
+      component.computed.songId.set.call(this, value)
+    }
   })
 
   component.computed.songId.set.call(context, 11)
-  assert.deepStrictEqual(context.dispatches.at(-1), { type: 'setCurrentSongId', payload: 11 })
+  assert.strictEqual(context.dispatches.length, 0)
+  assert.strictEqual(context.unsavedChangesDialog, true)
+  assert.strictEqual(context.unsavedChangesMessage, 'Save the current song changes before selecting another song.')
 
-  await component.watch.currentSongId.call(context)
-  assert.strictEqual(context.dataChanged, false)
-  assert.strictEqual(context.songReloadPending, false)
+  context.unsavedChangesDialog = false
+  component.computed.gigId.set.call(context, 2)
+  assert.strictEqual(context.dispatches.length, 0)
+  assert.strictEqual(context.unsavedChangesDialog, true)
+  assert.strictEqual(context.unsavedChangesMessage, 'Save the current song changes before selecting another gig.')
+
+  context.unsavedChangesDialog = false
+  context.chooseSong(songB)
+  assert.strictEqual(context.dispatches.length, 0)
+  assert.strictEqual(context.songPickerOpen, true)
+  assert.strictEqual(context.unsavedChangesDialog, true)
+
+  context.dataChanged = false
+  context.chooseSong(songB)
+  assert.deepStrictEqual(context.dispatches.at(-1), { type: 'setCurrentSongId', payload: 11 })
+  assert.strictEqual(context.songPickerOpen, false)
 }
 
 function testGigControlPanelRoutesPedalHighlightsByInstrumentSlot () {
@@ -1416,6 +1448,10 @@ function testGigControlPanelRoutesPedalHighlightsByInstrumentSlot () {
   }
 
   assert(source.includes('songReloadPending: false'), 'GigControlPanel.vue should track when saved changes need controller reload')
+  assert(source.includes('songPickerOpen: false'), 'GigControlPanel.vue should track the floating song picker')
+  assert(source.includes('unsavedChangesDialog: false'), 'GigControlPanel.vue should show a warning when selection is blocked by unsaved changes')
+  assert(!source.includes('label="Select Song"'), 'GigControlPanel.vue should replace the song combobox with the current song label')
+  assert(source.includes('class="songPickerPanel"'), 'GigControlPanel.vue should render the floating song picker panel')
   assert(source.includes("v-bind:class=\"(songReloadPending) ? 'songActionButtonActive selectSongButtonHighighted'"), 'GigControlPanel.vue should highlight reload after save')
   assert(source.includes('class="songActionPanel"'), 'GigControlPanel.vue should keep save and reload buttons side by side')
   assert(source.includes('display: flex;'), 'GigControlPanel.vue should use flex layout for top action buttons')
@@ -1601,7 +1637,7 @@ async function run () {
     testPresetsPanelBusinessMethods,
     testPresetControlBusinessMethods,
     testGigControlPanelBusinessMethods,
-    testGigControlPanelDropsUnsavedStateOnSongChange,
+    testGigControlPanelBlocksUiSelectionWithUnsavedChanges,
     testGigControlPanelRoutesPedalHighlightsByInstrumentSlot,
     testMyKnobValueWatcherIsImmediateAndNormalizesValues,
     testVueComponentsUseLengthProperty,

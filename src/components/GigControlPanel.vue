@@ -38,16 +38,14 @@
         </div>
       </v-col>
       <v-col cols="12" md="4">
-        <v-select
-          dark
+        <div
           v-if="currentSongList"
-          label="Select Song"
-          v-model="songId"
-          :items="currentSongList"
-          required
-          item-text="name"
-          item-value="id">
-        </v-select>
+          class="currentSongLabel"
+          @click="openSongPicker()"
+        >
+          <div class="currentSongCaption">Current Song</div>
+          <div class="currentSongValue">{{ currentSongDisplay }}</div>
+        </div>
       </v-col>
        <v-col cols="12" md="2">
         <div class="songActionPanel">
@@ -67,6 +65,49 @@
       </v-col>
     </v-row>
   </div>
+  <div v-if="songPickerOpen" class="songPickerPanel">
+    <div class="songPickerHeader">
+      <div>
+        <div class="songPickerCaption">Select Song</div>
+        <div class="songPickerTitle">{{ songPickerSongs.length }} Songs</div>
+      </div>
+      <v-icon class="songPickerClose" @click="closeSongPicker()">close</v-icon>
+    </div>
+    <div class="songPickerGrid songPickerGridHeader">
+      <div>ID</div>
+      <div>Name</div>
+      <div>Tempo</div>
+      <div></div>
+    </div>
+    <div class="songPickerList">
+      <div
+        v-for="song in songPickerSongs"
+        :key="song.id"
+        class="songPickerGrid songPickerRow"
+        v-bind:class="(song.id === currentSongId) ? 'songPickerRowSelected' : ''"
+        @dblclick="chooseSong(song)"
+      >
+        <div class="songPickerId">{{ song.id }}</div>
+        <div class="songPickerName">{{ song.name }}</div>
+        <div class="songPickerTempo">{{ song.tempo }}</div>
+        <button class="songPickerSelectButton" @click="chooseSong(song)">Select</button>
+      </div>
+    </div>
+  </div>
+  <v-dialog v-model="unsavedChangesDialog" max-width="460px">
+    <v-card dark class="unsavedChangesDialog">
+      <v-card-title class="headline">Unsaved Changes</v-card-title>
+      <v-card-text>
+        {{ unsavedChangesMessage }}
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="light-blue lighten-2" text @click="unsavedChangesDialog = false">
+          OK
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 <!-------PROFRAM A----------->
     <v-row md12 ma-0 pa-0 no-gutters>
 
@@ -268,6 +309,9 @@ export default {
       initFlag: true,
       dataChanged: false,
       songReloadPending: false,
+      songPickerOpen: false,
+      unsavedChangesDialog: false,
+      unsavedChangesMessage: '',
       currentPedal1Value: 1,
       currentPedal2Value: 1,
       isPlaying: false
@@ -289,6 +333,9 @@ export default {
       set (value) {
         // this.$log.debug(` >>>> SongId setter  old=${this.currentSongId}  new=${value} `)
         if (this.currentSongId !== value && value > 0) {
+          if (!this.canChangeSelection('Save the current song changes before selecting another song.')) {
+            return
+          }
           // this.$log.debug(` >>> SongId setter is fired ---))) -- ${value}`)
           this.$store.dispatch('setCurrentSongId', value)
         }
@@ -299,6 +346,9 @@ export default {
         return this.selectedGigId
       },
       set (value) {
+        if (this.selectedGigId !== value && !this.canChangeSelection('Save the current song changes before selecting another gig.')) {
+          return
+        }
         this.$store.dispatch('setSelectedGigId', value)
       }
     },
@@ -307,6 +357,20 @@ export default {
       get () {
         if (this.currentSong) return this.currentSong.tempo
         else return -1
+      }
+    },
+    currentSongDisplay: {
+      get () {
+        if (!this.currentSong) return 'No song selected'
+        const tempo = this.currentSong.tempo ? ` / ${this.currentSong.tempo} BPM` : ''
+        return `${this.currentSong.id}. ${this.currentSong.name}${tempo}`
+      }
+    },
+    songPickerSongs: {
+      get () {
+        if (this.currentSongList && this.currentSongList.length > 0) return this.currentSongList
+        if (this.songList && this.songList.length > 0) return this.songList
+        return []
       }
     }
   },
@@ -351,6 +415,7 @@ export default {
     currentSongId: async function () {
       this.dataChanged = false
       this.songReloadPending = false
+      this.songPickerOpen = false
       if (!this.currentSong || this.currentSong.id !== this.currentSongId) {
         this.setCurrentSong()
       }
@@ -424,6 +489,34 @@ export default {
       } catch (ex) {
         this.$log.error(ex)
       }
+    },
+    openSongPicker () {
+      if (this.songPickerSongs.length > 0) {
+        this.songPickerOpen = true
+      }
+    },
+    closeSongPicker () {
+      this.songPickerOpen = false
+    },
+    chooseSong (song) {
+      if (song && song.id !== this.currentSongId && !this.canChangeSelection('Save the current song changes before selecting another song.')) {
+        return
+      }
+      if (song && song.id > 0) {
+        this.songId = song.id
+      }
+      this.songPickerOpen = false
+    },
+    canChangeSelection (message) {
+      if (!this.dataChanged) {
+        return true
+      }
+      this.showUnsavedChangesWarning(message)
+      return false
+    },
+    showUnsavedChangesWarning (message) {
+      this.unsavedChangesMessage = message
+      this.unsavedChangesDialog = true
     },
 
     async getGigSongs (gig) {
@@ -524,6 +617,9 @@ export default {
       }
     },
     clearGig () {
+      if (!this.canChangeSelection('Save the current song changes before clearing the selected gig.')) {
+        return
+      }
       this.currentGig = null
       this.$store.dispatch('setSelectedGigId', -1)
     },
@@ -630,6 +726,143 @@ export default {
   padding-bottom: 40px;
   padding-left: 60px;
   padding-right: 20px;
+}
+
+.currentSongLabel {
+  height: 48px;
+  margin: 0px 20px 0px 60px;
+  padding: 3px 12px;
+  color: azure;
+  text-align: left;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.74);
+  cursor: pointer;
+}
+.currentSongLabel:hover {
+  background-color: rgba(15, 38, 72, 0.6);
+}
+.currentSongCaption {
+  color: #b0bec5;
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 14px;
+}
+.currentSongValue {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 28px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 1px 1px 1px rgba(5, 79, 218, 0.83);
+  white-space: nowrap;
+}
+.songPickerPanel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  width: 430px;
+  max-width: 88vw;
+  height: 100vh;
+  padding: 14px 12px;
+  color: #eceff1;
+  background-color: rgba(9, 12, 17, 0.97);
+  border-left: 3px solid #0b3f9f;
+  box-shadow: -8px 0 16px -4px rgba(35, 116, 221, 0.62);
+}
+.songPickerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 12px 4px;
+}
+.songPickerCaption {
+  color: #90a4ae;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+.songPickerTitle {
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: bold;
+  line-height: 32px;
+}
+.songPickerClose {
+  color: #90caf9 !important;
+  font-size: 32px !important;
+}
+.songPickerGrid {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 62px 76px;
+  column-gap: 8px;
+  align-items: center;
+}
+.songPickerGridHeader {
+  padding: 8px 10px;
+  color: #90a4ae;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(144, 202, 249, 0.28);
+}
+.songPickerList {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 6px 0 16px 0;
+}
+.songPickerRow {
+  min-height: 44px;
+  margin: 5px 0;
+  padding: 5px 10px;
+  color: #eceff1;
+  background-color: rgba(26, 31, 38, 0.92);
+  border: 1px solid rgba(69, 90, 100, 0.8);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.songPickerRow:hover {
+  border-color: rgba(35, 116, 221, 0.85);
+  background-color: rgba(16, 34, 60, 0.94);
+}
+.songPickerRowSelected {
+  border: 2px solid #0b3f9f;
+  background-color: rgba(8, 8, 10, 1);
+  box-shadow: 4px 5px 7px -2px rgba(35, 116, 221, 0.7);
+}
+.songPickerId,
+.songPickerTempo {
+  color: #cfd8dc;
+  font-weight: bold;
+}
+.songPickerName {
+  overflow: hidden;
+  color: #ffffff;
+  font-weight: bold;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.songPickerSelectButton {
+  min-width: 68px;
+  height: 30px;
+  color: #ffffff;
+  font-weight: bold;
+  background-color: rgba(11, 63, 159, 0.86);
+  border: 1px solid rgba(144, 202, 249, 0.76);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.songPickerSelectButton:hover {
+  background-color: rgba(35, 116, 221, 0.94);
+}
+.unsavedChangesDialog {
+  color: #eceff1;
+  background-color: rgba(12, 16, 22, 0.98) !important;
+  border: 2px solid #0b3f9f;
+  box-shadow: 4px 5px 9px -2px rgba(35, 116, 221, 0.72);
 }
 
 .songActionPanel {
