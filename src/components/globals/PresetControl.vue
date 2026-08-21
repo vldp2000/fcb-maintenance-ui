@@ -477,12 +477,12 @@ export default {
     align-items: flex-start;
     height: 40px;
   }
-  .presetName {
+  .presetHeader .presetName {
     display: flex;
     margin: 0px;
     padding: 0px;
     padding-top: 12px;
-    margin-left: 14px;
+    margin-left: 24px;
     text-align: left;
     justify-content: flex-start;
     align-items: flex-start;
@@ -502,7 +502,7 @@ export default {
   .effectToggleGrid .checkbox:nth-child(odd) {
     margin-left: 6px!important;
   }
-  .instrumentImage {
+  .presetHeader .instrumentImage {
     height: 40px;
     width: 40px;
     margin-top: 12px;

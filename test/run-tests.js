@@ -1657,7 +1657,9 @@ function testMetronomeUsesSongBpmForBlinkInterval () {
 function testPresetNameHasInstrumentGap () {
   const source = readSrcFile('components/globals/PresetControl.vue')
 
-  assert(source.includes('margin-left: 14px;'), 'PresetControl.vue should keep a readable gap between instrument image and preset name')
+  assert(source.includes('.presetHeader .presetName'), 'PresetControl.vue should use a specific preset name selector that is not overridden by mobile styles')
+  assert(source.includes('margin-left: 24px;'), 'PresetControl.vue should keep a readable gap between instrument image and preset name')
+  assert(source.includes('.presetHeader .instrumentImage'), 'PresetControl.vue should keep desktop instrument image layout specific to the preset header')
 }
 
 async function run () {
