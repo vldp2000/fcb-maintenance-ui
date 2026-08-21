@@ -1607,6 +1607,37 @@ function testLiveSelectionUsesBlurredGradientShadow () {
   }
 }
 
+function testMetronomeUsesSongBpmForBlinkInterval () {
+  const component = loadVueComponent('components/globals/Metronome.vue')
+  const source = readSrcFile('components/globals/Metronome.vue')
+  const context = {
+    bpm: '120',
+    timeSignature: '4/4',
+    beats: 4,
+    measure: 4,
+    running: false,
+    count: 0,
+    timerId: 123
+  }
+
+  assert.strictEqual(component.props.bpm.default, -1)
+  assert(!Object.prototype.hasOwnProperty.call(component.props, 'bmp'), 'Metronome.vue should use bpm, not the old bmp typo')
+  assert.strictEqual(component.computed.interval.call(context), 500)
+  assert.strictEqual(component.computed.beats.call(context), 4)
+  assert.strictEqual(component.computed.measure.call(context), 4)
+
+  context.running = true
+  component.methods.tick.call(context)
+  assert.strictEqual(context.count, 1)
+  assert.strictEqual(component.methods.getMetronomeColor.call(context), 'accentBeat')
+  component.methods.tick.call(context)
+  assert.strictEqual(context.count, 2)
+  assert.strictEqual(component.methods.getMetronomeColor.call(context), 'regularBeat')
+
+  assert(source.includes('clearInterval(this.timerId)'), 'Metronome.vue should clean up the running blink timer')
+  assert(source.includes('color: #9cff9c;'), 'Metronome.vue should use light green for the beat blink')
+}
+
 async function run () {
   const tests = [
     testValidateSongAcceptsValidSong,
@@ -1649,7 +1680,8 @@ async function run () {
     testModulationEffectIsLabeledModInLiveUi,
     testBoostFlagReplacesMuteInPresetUi,
     testPresetControlUsesCompactEffectToggleGrid,
-    testLiveSelectionUsesBlurredGradientShadow
+    testLiveSelectionUsesBlurredGradientShadow,
+    testMetronomeUsesSongBpmForBlinkInterval
   ]
 
   const failures = []

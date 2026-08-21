@@ -1,19 +1,18 @@
 <template>
-  <v-container grid-list-md text-md-center fluid>
-    <v-row no-gutters>
-      <v-col>
-        <v-icon v-if="running"
-          v-bind:class="getMetronomeColor()"
-        >
-          fiber_manual_record
-        </v-icon>
-      </v-col>
-      <v-col>
-        <v-icon  large class="playButton" @click="toggleRunning">
-          play_circle_outline
-        </v-icon>
-      </v-col>
-    </v-row>
+  <v-container grid-list-md text-md-center fluid class="metronome">
+    <button
+      class="metronomeButton"
+      v-bind:class="running ? 'metronomeButtonRunning' : ''"
+      @click="toggleRunning"
+    >
+      <v-icon
+        large
+        class="playButton"
+        v-bind:class="getMetronomeColor()"
+      >
+        {{ running ? 'fiber_manual_record' : 'play_circle_outline' }}
+      </v-icon>
+    </button>
   </v-container>
 </template>
 
@@ -21,23 +20,14 @@
 export default {
   data () {
     return {
-      x: 0,
-      // bpm: 128,
       running: false,
       count: 0,
-      totalCount: 1,
-      time: performance.now(),
-      // timeSignature: '4/4',
-      soundReady: false,
-      tapTempoTimes: [],
-      tapTempoTime: null,
-      backgroundActive: false,
-      enableBackground: false
+      timerId: null
     }
   },
   props: {
-    bmp: {
-      type: Number,
+    bpm: {
+      type: [Number, String],
       default: -1
     },
     timeSignature: {
@@ -48,17 +38,17 @@ export default {
 
   computed: {
     interval () {
-      return (60 * 1000) / (this.bpm * (this.measure / 4))
+      const bpm = Number(this.bpm)
+      if (!Number.isFinite(bpm) || bpm <= 0) return 0
+      return (60 * 1000) / (bpm * (this.measure / 4))
     },
     beats () {
-      return Number(this.timeSignature.split('/')[0])
+      const beats = Number(this.timeSignature.split('/')[0])
+      return Number.isFinite(beats) && beats > 0 ? beats : 4
     },
     measure () {
-      return Number(this.timeSignature.split('/')[1])
-    },
-    color () {
-      if (this.count === 0) return 'red'
-      else return 'green'
+      const measure = Number(this.timeSignature.split('/')[1])
+      return Number.isFinite(measure) && measure > 0 ? measure : 4
     }
   },
   watch: {
@@ -66,64 +56,63 @@ export default {
     beats: 'reset',
     measure: 'reset'
   },
-  mounted () {
-    const frame = () => {
-      const d = performance.now() - this.time
-      if (d / this.totalCount > this.interval) {
-        this.tick()
-        this.totalCount += 1
-      }
-      requestAnimationFrame(frame)
-    }
-    requestAnimationFrame(frame)
+  beforeDestroy () {
+    this.stopTimer()
   },
   methods: {
     toggleRunning () {
-      this.x = 0
-      this.running = !this.running
-      this.tickActive = false
-
       if (this.running) {
-        this.updateBackground()
-        setTimeout(() => {
-          this.updateBackground()
-        }, this.interval)
-        this.set(2)
+        this.stop()
+        return
       }
+      this.start()
     },
-    set (count) {
-      this.totalCount = count
-      this.count = count
-      this.time = performance.now()
+    start () {
+      if (this.interval <= 0) return
+      this.running = true
+      this.count = 0
+      this.tick()
+      this.timerId = setInterval(this.tick, this.interval)
+    },
+    stop () {
+      this.running = false
+      this.count = 0
+      this.stopTimer()
     },
     reset () {
-      this.set(0)
+      if (!this.running) {
+        this.count = 0
+        return
+      }
+      this.stopTimer()
+      this.count = 0
+      if (this.interval > 0) {
+        this.tick()
+        this.timerId = setInterval(this.tick, this.interval)
+      } else {
+        this.running = false
+      }
     },
     tick () {
       if (!this.running) {
         return
       }
-
-      if (this.count === this.beats) {
-        this.count = 0
-      }
-
-      this.updateBackground()
-      this.count += 1
-      this.x += 1
-      // if (this.x > 100) this.running = false
+      this.count = (this.count % this.beats) + 1
     },
-    updateBackground () {
-      this.backgroundActive = !this.backgroundActive
+    stopTimer () {
+      if (this.timerId) {
+        clearInterval(this.timerId)
+        this.timerId = null
+      }
     },
     getMetronomeColor () {
-      if (this.count === 1) {
-        return 'redback'
-      } else if (this.count % 2 === 0) {
-        return 'greenback'
-      } else {
-        return 'whiteback'
+      if (!this.running) {
+        return 'inactiveBeat'
       }
+      if (this.count === 1) {
+        return 'accentBeat'
+      }
+      return 'regularBeat'
     }
   }
 }
@@ -131,10 +120,27 @@ export default {
 
 <style scoped>
 
-  .playButton {
-    color: rgb(103, 103, 109);
+  .metronome {
+    padding: 0;
+    margin: 0;
+  }
+  .metronomeButton {
+    width: 48px;
+    height: 48px;
     margin-left: 10px;
-    margin-top: -5px;
+    margin-top: -3px;
+    padding: 0;
+    background-color: rgba(8, 8, 10, 0.88);
+    border: 2px solid #263238;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .metronomeButtonRunning {
+    border-color: #0b3f9f;
+    box-shadow: 4px 5px 7px -2px rgba(35, 116, 221, 0.7);
+  }
+  .playButton {
+    margin-top: -1px;
   }
   .input-group label {
     transition: none !important;
@@ -144,13 +150,13 @@ export default {
     transition: none !important;
   }
 
-  .redback {
-    color: brown;
+  .inactiveBeat {
+    color: rgb(103, 103, 109);
   }
-  .greenback {
-    color:green;
+  .accentBeat {
+    color: #9cff9c;
   }
-  .whiteback {
-    color:white;
+  .regularBeat {
+    color: #c8ffd2;
   }
 </style>
