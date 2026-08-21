@@ -482,7 +482,7 @@ export default {
     margin: 0px;
     padding: 0px;
     padding-top: 12px;
-    margin-left: 10px;
+    margin-left: 14px;
     text-align: left;
     justify-content: flex-start;
     align-items: flex-start;

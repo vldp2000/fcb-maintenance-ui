@@ -1273,6 +1273,16 @@ async function testPresetControlBusinessMethods () {
   assert.strictEqual(context.editMode, true)
   assert.deepStrictEqual(context.dispatches.at(-1), { type: 'sendEditMode', payload: 6 })
 
+  context.presetVolumeFromController = 96
+  component.watch.presetVolumeFromController.call(context)
+  assert.strictEqual(context.songPreset.volume, 96)
+
+  context.editMode = false
+  context.presetVolumeFromController = 32
+  component.watch.presetVolumeFromController.call(context)
+  assert.strictEqual(context.songPreset.volume, 96)
+
+  context.editMode = true
   context.onPresetClick()
   assert.strictEqual(context.dialog, true)
 
@@ -1644,6 +1654,12 @@ function testMetronomeUsesSongBpmForBlinkInterval () {
   assert(source.includes('.metronomeButtonBlackBeat') && source.includes('rgba(35, 116, 221, 0.82)'), 'Metronome.vue should show the blue glow on the black beat')
 }
 
+function testPresetNameHasInstrumentGap () {
+  const source = readSrcFile('components/globals/PresetControl.vue')
+
+  assert(source.includes('margin-left: 14px;'), 'PresetControl.vue should keep a readable gap between instrument image and preset name')
+}
+
 async function run () {
   const tests = [
     testValidateSongAcceptsValidSong,
@@ -1687,7 +1703,8 @@ async function run () {
     testBoostFlagReplacesMuteInPresetUi,
     testPresetControlUsesCompactEffectToggleGrid,
     testLiveSelectionUsesBlurredGradientShadow,
-    testMetronomeUsesSongBpmForBlinkInterval
+    testMetronomeUsesSongBpmForBlinkInterval,
+    testPresetNameHasInstrumentGap
   ]
 
   const failures = []
