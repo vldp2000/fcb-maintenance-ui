@@ -1619,6 +1619,7 @@ function testMetronomeUsesSongBpmForBlinkInterval () {
     count: 0,
     timerId: 123
   }
+  context.isGreenBeat = component.methods.isGreenBeat.bind(context)
 
   assert.strictEqual(component.props.bpm.default, -1)
   assert(!Object.prototype.hasOwnProperty.call(component.props, 'bmp'), 'Metronome.vue should use bpm, not the old bmp typo')
@@ -1629,13 +1630,18 @@ function testMetronomeUsesSongBpmForBlinkInterval () {
   context.running = true
   component.methods.tick.call(context)
   assert.strictEqual(context.count, 1)
-  assert.strictEqual(component.methods.getMetronomeColor.call(context), 'accentBeat')
+  assert.strictEqual(component.methods.getMetronomeColor.call(context), 'greenBeat')
+  assert.strictEqual(component.methods.getMetronomeButtonClass.call(context), 'metronomeButtonGreenBeat')
   component.methods.tick.call(context)
   assert.strictEqual(context.count, 2)
-  assert.strictEqual(component.methods.getMetronomeColor.call(context), 'regularBeat')
+  assert.strictEqual(component.methods.getMetronomeColor.call(context), 'blackBeat')
+  assert.strictEqual(component.methods.getMetronomeButtonClass.call(context), 'metronomeButtonBlackBeat')
 
   assert(source.includes('clearInterval(this.timerId)'), 'Metronome.vue should clean up the running blink timer')
-  assert(source.includes('color: #9cff9c;'), 'Metronome.vue should use light green for the beat blink')
+  assert(source.includes('color: #50d178;'), 'Metronome.vue should use a visible darker green for the beat blink')
+  assert(source.includes('color: #050608;'), 'Metronome.vue should pulse from green to black')
+  assert(source.includes('.metronomeButtonGreenBeat') && source.includes('box-shadow: none;'), 'Metronome.vue should hide the blue glow on the green beat')
+  assert(source.includes('.metronomeButtonBlackBeat') && source.includes('rgba(35, 116, 221, 0.82)'), 'Metronome.vue should show the blue glow on the black beat')
 }
 
 async function run () {

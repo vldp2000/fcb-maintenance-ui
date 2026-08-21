@@ -2,7 +2,7 @@
   <v-container grid-list-md text-md-center fluid class="metronome">
     <button
       class="metronomeButton"
-      v-bind:class="running ? 'metronomeButtonRunning' : ''"
+      v-bind:class="getMetronomeButtonClass()"
       @click="toggleRunning"
     >
       <v-icon
@@ -109,10 +109,17 @@ export default {
       if (!this.running) {
         return 'inactiveBeat'
       }
-      if (this.count === 1) {
-        return 'accentBeat'
+      if (this.isGreenBeat()) {
+        return 'greenBeat'
       }
-      return 'regularBeat'
+      return 'blackBeat'
+    },
+    getMetronomeButtonClass () {
+      if (!this.running) return ''
+      return this.isGreenBeat() ? 'metronomeButtonGreenBeat' : 'metronomeButtonBlackBeat'
+    },
+    isGreenBeat () {
+      return this.count % 2 === 1
     }
   }
 }
@@ -135,9 +142,13 @@ export default {
     border-radius: 50%;
     cursor: pointer;
   }
-  .metronomeButtonRunning {
+  .metronomeButtonGreenBeat {
+    border-color: #1f7f46;
+    box-shadow: none;
+  }
+  .metronomeButtonBlackBeat {
     border-color: #0b3f9f;
-    box-shadow: 4px 5px 7px -2px rgba(35, 116, 221, 0.7);
+    box-shadow: 4px 5px 8px -2px rgba(35, 116, 221, 0.82);
   }
   .playButton {
     margin-top: -1px;
@@ -153,10 +164,10 @@ export default {
   .inactiveBeat {
     color: rgb(103, 103, 109);
   }
-  .accentBeat {
-    color: #9cff9c;
+  .greenBeat {
+    color: #50d178;
   }
-  .regularBeat {
-    color: #c8ffd2;
+  .blackBeat {
+    color: #050608;
   }
 </style>
