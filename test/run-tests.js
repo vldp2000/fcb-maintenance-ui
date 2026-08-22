@@ -874,6 +874,8 @@ function testMutationsUpdateState () {
   assert.deepStrictEqual(state.songList, [])
   mutations.ADD_SONG(state, { id: 2 })
   assert.deepStrictEqual(state.songList, [{ id: 2 }])
+  mutations.ADD_SONG(state, { id: 2, name: 'Duplicate Add' })
+  assert.deepStrictEqual(state.songList, [{ id: 2, name: 'Duplicate Add' }])
   mutations.UPDATE_SONG(state, { id: 2, name: 'Updated' })
   assert.deepStrictEqual(state.songList[0], { id: 2, name: 'Updated' })
   mutations.REFRESH_SONG(state)
@@ -1109,6 +1111,67 @@ async function testSongsPanelSaveSongChoosesAddOrUpdate () {
   })
   assert.deepStrictEqual(context.loadingValues, [true, false, true, false])
   assert.strictEqual(context.closeDialogCalled, 2)
+}
+
+async function testSongsPanelNewItemResetsEditState () {
+  const component = loadVueComponent('components/SongsPanel.vue', {
+    '@/components/SongProgramsPanel': {}
+  }, {})
+  const context = makeComponentContext(component)
+
+  context.editedIndex = 3
+  context.editedItem = { id: 10, name: 'Existing Song', tempo: 120 }
+
+  context.newItem()
+
+  assert.strictEqual(context.editedIndex, -1)
+  assert.deepStrictEqual(context.editedItem, context.defaultItem)
+  assert.notStrictEqual(context.editedItem, context.defaultItem)
+  assert.strictEqual(context.dialog, true)
+}
+
+async function testSongsPanelSaveSongIgnoresDuplicateSubmitWhileSaving () {
+  const component = loadVueComponent('components/SongsPanel.vue', {
+    '@/components/SongProgramsPanel': {}
+  }, {})
+  let resolveDispatch
+  const context = makeComponentContext(component, {
+    closeDialogCalled: 0,
+    loadingValues: [],
+    $store: {
+      dispatch (type, payload) {
+        context.dispatches.push({ type, payload })
+        return new Promise(resolve => {
+          resolveDispatch = resolve
+        })
+      }
+    },
+    closeDialog () {
+      this.closeDialogCalled += 1
+    },
+    showLoading (value) {
+      this.loadingValues.push(value)
+      this.isLoading = value
+    }
+  })
+
+  context.editedIndex = -1
+  context.editedItem = { name: 'New Song' }
+
+  const firstSave = context.saveSong(null)
+  const secondSave = context.saveSong(null)
+  assert.strictEqual(context.dispatches.length, 1)
+
+  resolveDispatch()
+  await firstSave
+  await secondSave
+
+  assert.deepStrictEqual(context.dispatches, [{
+    type: 'addSong',
+    payload: context.editedItem
+  }])
+  assert.deepStrictEqual(context.loadingValues, [true, false])
+  assert.strictEqual(context.closeDialogCalled, 1)
 }
 
 async function testSongsPanelRowClickedLoadsProgramsBeforeExpand () {
@@ -1741,6 +1804,8 @@ async function run () {
     testInstrumentServicesMapApiRequests,
     testSingleOrDoubleRowClickCallbacks,
     testSongsPanelSaveSongChoosesAddOrUpdate,
+    testSongsPanelNewItemResetsEditState,
+    testSongsPanelSaveSongIgnoresDuplicateSubmitWhileSaving,
     testSongsPanelRowClickedLoadsProgramsBeforeExpand,
     testGigPanelOpensSongSelectionForEmptyGig,
     testGigPanelSaveNewGigOpensSongSelection,

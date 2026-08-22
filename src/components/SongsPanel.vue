@@ -54,7 +54,7 @@
 
           <v-dialog v-model="dialog" max-width="500px">
             <template v-slot:activator="{ on }">
-              <v-btn color="primary" dark class="mb-2" v-on="on">New Item</v-btn>
+              <v-btn color="primary" dark class="mb-2" v-on="on" @click="newItem">New Item</v-btn>
             </template>
 
             <v-card>
@@ -148,6 +148,7 @@ export default {
       expanded: [],
       singleExpand: true,
       isLoading: true,
+      savingSong: false,
       headers: [
         {
           text: 'Name',
@@ -208,6 +209,12 @@ export default {
       this.isLoading = value
     },
 
+    newItem () {
+      this.editedIndex = -1
+      this.editedItem = Object.assign({}, this.defaultItem)
+      this.dialog = true
+    },
+
     editItem (item) {
       // this.$log.debug('... Edit Item', item)
       this.editedIndex = this.songs.indexOf(item)
@@ -232,7 +239,11 @@ export default {
     },
 
     async saveSong (value) {
+      if (this.savingSong) {
+        return
+      }
       if (value === null) {
+        this.savingSong = true
         this.showLoading(true)
         // this.$log.debug('saveSong () -------')
         // this.$log.debug(this.editedItem)
@@ -248,6 +259,7 @@ export default {
         } catch (err) {
           this.$log.error(err)
         } finally {
+          this.savingSong = false
           this.showLoading(false)
         }
       } else {

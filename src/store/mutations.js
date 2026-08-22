@@ -13,7 +13,12 @@ const mutations = {
     state.songList = songList
   },
   [types.ADD_SONG] (state, song) {
-    state.songList.push(song)
+    const item = state.songList.find(item => item.id === song.id)
+    if (item) {
+      Object.assign(item, song)
+    } else {
+      state.songList.push(song)
+    }
   },
   [types.UPDATE_SONG] (state, song) {
     const item = state.songList.find(item => item.id === song.id)
