@@ -452,7 +452,7 @@ export default {
   .customKnob {
     height: 60px;
     width: 60px;
-    margin-top: 8px;
+    margin-top: 4px;
     margin-right: 5px;
   }
   .customKnob:first-child {
@@ -481,7 +481,7 @@ export default {
     display: flex;
     margin: 0px;
     padding: 0px;
-    padding-top: 12px;
+    padding-top: 14px;
     margin-left: 24px;
     text-align: left;
     justify-content: flex-start;
@@ -505,7 +505,7 @@ export default {
   .presetHeader .instrumentImage {
     height: 40px;
     width: 40px;
-    margin-top: 12px;
+    margin-top: 2px;
     margin-left: 14px;
     padding-bottom: -5px;
   }
