@@ -7,7 +7,7 @@
     <v-container v-bind:class="(editMode) ? 'edit-mode ma-0 pa-0' : 'view-mode ma-0 pa-0'" fluid>
       <div class="presetHeader">
         <div class="instrumentImage">
-          <v-img :src="imageURL" @click="onIconClick()"/>
+          <v-img class="instrumentIconImage" :src="imageURL" contain @click="onIconClick()"/>
         </div>
         <div class="saveSongPreset()">
           <v-icon
@@ -482,7 +482,7 @@ export default {
     margin: 0px;
     padding: 0px;
     padding-top: 14px;
-    margin-left: 24px;
+    margin-left: 8px;
     text-align: left;
     justify-content: flex-start;
     align-items: flex-start;
@@ -505,9 +505,15 @@ export default {
   .presetHeader .instrumentImage {
     height: 40px;
     width: 40px;
-    margin-top: 2px;
-    margin-left: 14px;
+    margin-top: 0px;
+    margin-left: 12px;
     padding-bottom: -5px;
+  }
+  .presetHeader .instrumentIconImage {
+    height: 40px!important;
+    width: 40px!important;
+    max-height: 40px!important;
+    max-width: 40px!important;
   }
   .checkbox label {
     font-size: 10px!important;
