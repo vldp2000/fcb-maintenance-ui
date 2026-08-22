@@ -1,6 +1,6 @@
 {
   "name": "maintenance",
-  "version": "2.1.20",
+  "version": "2.1.21",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",

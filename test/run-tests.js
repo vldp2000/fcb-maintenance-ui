@@ -1113,6 +1113,26 @@ async function testSongsPanelSaveSongChoosesAddOrUpdate () {
   assert.strictEqual(context.closeDialogCalled, 2)
 }
 
+async function testSongsPanelEditExistingSongUsesSongListIndex () {
+  const component = loadVueComponent('components/SongsPanel.vue', {
+    '@/components/SongProgramsPanel': {}
+  }, {})
+  const existingSong = { id: 10, name: 'Existing Song', tempo: 120 }
+  const context = makeComponentContext(component, {
+    songs: [],
+    songList: [existingSong]
+  })
+
+  context.editItem(existingSong)
+  await context.saveSong(null)
+
+  assert.strictEqual(context.editedIndex, 0)
+  assert.deepStrictEqual(context.dispatches.at(-1), {
+    type: 'updateSong',
+    payload: context.editedItem
+  })
+}
+
 async function testSongsPanelNewItemResetsEditState () {
   const component = loadVueComponent('components/SongsPanel.vue', {
     '@/components/SongProgramsPanel': {}
@@ -1172,6 +1192,56 @@ async function testSongsPanelSaveSongIgnoresDuplicateSubmitWhileSaving () {
   }])
   assert.deepStrictEqual(context.loadingValues, [true, false])
   assert.strictEqual(context.closeDialogCalled, 1)
+}
+
+async function testSongsPanelShowsSavingMessageWhileSaving () {
+  const component = loadVueComponent('components/SongsPanel.vue', {
+    '@/components/SongProgramsPanel': {}
+  }, {})
+  let resolveDispatch
+  const context = makeComponentContext(component, {
+    $store: {
+      dispatch (type, payload) {
+        context.dispatches.push({ type, payload })
+        return new Promise(resolve => {
+          resolveDispatch = resolve
+        })
+      }
+    },
+    closeDialog () {}
+  })
+
+  context.editedIndex = -1
+  context.editedItem = { name: 'New Song' }
+
+  const savePromise = context.saveSong(null)
+  assert.strictEqual(context.savingSongMessage, 'Saving song...')
+
+  resolveDispatch()
+  await savePromise
+
+  assert.strictEqual(context.savingSongMessage, '')
+}
+
+async function testSongsPanelRowSaveUpdatesExistingSong () {
+  const component = loadVueComponent('components/SongsPanel.vue', {
+    '@/components/SongProgramsPanel': {}
+  }, {})
+  const existingSong = { id: 10, name: 'Existing Song', tempo: 120 }
+  const context = makeComponentContext(component, {
+    closeDialogCalled: 0,
+    closeDialog () {
+      this.closeDialogCalled += 1
+    }
+  })
+
+  await context.saveSong(existingSong)
+
+  assert.deepStrictEqual(context.dispatches.at(-1), {
+    type: 'updateSong',
+    payload: existingSong
+  })
+  assert.strictEqual(context.closeDialogCalled, 0)
 }
 
 async function testSongsPanelRowClickedLoadsProgramsBeforeExpand () {
@@ -1804,8 +1874,11 @@ async function run () {
     testInstrumentServicesMapApiRequests,
     testSingleOrDoubleRowClickCallbacks,
     testSongsPanelSaveSongChoosesAddOrUpdate,
+    testSongsPanelEditExistingSongUsesSongListIndex,
     testSongsPanelNewItemResetsEditState,
     testSongsPanelSaveSongIgnoresDuplicateSubmitWhileSaving,
+    testSongsPanelShowsSavingMessageWhileSaving,
+    testSongsPanelRowSaveUpdatesExistingSong,
     testSongsPanelRowClickedLoadsProgramsBeforeExpand,
     testGigPanelOpensSongSelectionForEmptyGig,
     testGigPanelSaveNewGigOpensSongSelection,

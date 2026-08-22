@@ -63,6 +63,14 @@
               </v-card-title>
 
               <v-card-text>
+                <v-alert
+                  v-if="savingSongMessage"
+                  dense
+                  text
+                  type="info"
+                >
+                  {{ savingSongMessage }}
+                </v-alert>
                 <v-container>
                   <v-row>
                     <v-col cols="12" sm="6" md="4">
@@ -110,21 +118,29 @@
       </template>
 
       <template v-slot:item.action="{ item }">
-        <v-icon
-          class="mr-1"
-          @click="editItem(item)"
+        <v-btn
+          outlined
+          small
+          color="primary"
+          class="rowActionButton mr-1"
+          @click.stop="editItem(item)"
         >
-          edit
-        </v-icon>
+          <v-icon small left>edit</v-icon>
+          Edit
+        </v-btn>
       </template>
 
       <template v-slot:item.save="{ item }">
-        <v-icon
-          class="mr-1"
-          @click="saveSong(item)"
+        <v-btn
+          outlined
+          small
+          color="primary"
+          class="rowActionButton mr-1"
+          @click.stop="saveSong(item)"
         >
-          save
-        </v-icon>
+          <v-icon small left>save</v-icon>
+          Save
+        </v-btn>
       </template>
 
     </v-data-table>
@@ -149,6 +165,7 @@ export default {
       singleExpand: true,
       isLoading: true,
       savingSong: false,
+      savingSongMessage: '',
       headers: [
         {
           text: 'Name',
@@ -217,7 +234,7 @@ export default {
 
     editItem (item) {
       // this.$log.debug('... Edit Item', item)
-      this.editedIndex = this.songs.indexOf(item)
+      this.editedIndex = this.songList.indexOf(item)
       // this.$log.debug(this.editedIndex)
       this.editedItem = Object.assign({}, item)
       // this.$log.debug(this.editedItem)
@@ -242,9 +259,10 @@ export default {
       if (this.savingSong) {
         return
       }
+      this.savingSong = true
+      this.savingSongMessage = 'Saving song...'
+      this.showLoading(true)
       if (value === null) {
-        this.savingSong = true
-        this.showLoading(true)
         // this.$log.debug('saveSong () -------')
         // this.$log.debug(this.editedItem)
         try {
@@ -260,10 +278,19 @@ export default {
           this.$log.error(err)
         } finally {
           this.savingSong = false
+          this.savingSongMessage = ''
           this.showLoading(false)
         }
       } else {
-        this.$log.debug(value)
+        try {
+          await this.$store.dispatch('updateSong', value)
+        } catch (err) {
+          this.$log.error(err)
+        } finally {
+          this.savingSong = false
+          this.savingSongMessage = ''
+          this.showLoading(false)
+        }
       }
     },
 
@@ -331,5 +358,10 @@ export default {
   }
   .customTableCell {
     font-size: 20px !important;
+  }
+  .rowActionButton {
+    min-width: 86px;
+    border-width: 1px;
+    font-weight: 600;
   }
 </style>
