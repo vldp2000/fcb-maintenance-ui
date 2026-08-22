@@ -321,6 +321,7 @@ const actions = {
         gig.songList.push(song)
       }
       commit(types.UPDATE_GIG, gig)
+      commit(types.REFRESH_GIG_SONGS, gig.id)
     } catch (ex) {
       Vue.$log.error(ex)
     }

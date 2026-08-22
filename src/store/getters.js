@@ -23,6 +23,7 @@ const getters = {
       state.instrumentList[0].imageURL.length > 0
   },
   refreshSong: state => state.refreshSong,
+  refreshGigSongs: state => state.refreshGigSongs,
   defaultPreset: state => state.defaultPreset,
   pedal1Value: state => state.pedal1Value,
   pedal2Value: state => state.pedal2Value,

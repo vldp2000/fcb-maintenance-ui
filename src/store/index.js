@@ -31,6 +31,10 @@ const Store = new Vuex.Store({
     allInitialized: false,
     initialisingIsInProgress: false,
     refreshSong: false,
+    refreshGigSongs: {
+      gigId: -1,
+      sequence: 0
+    },
     pedal1Value: 1,
     pedal2Value: 1,
     presetVolumeFromController: 0,

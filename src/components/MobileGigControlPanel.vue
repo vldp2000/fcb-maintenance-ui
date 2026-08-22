@@ -202,7 +202,7 @@ export default {
       'gigList', 'songList', 'currentSongId', 'currentProgramMidiPedal',
       'selectedGigId', 'scheduledGigId',
       'allInitialized', 'instrumentListImagesInitialized',
-      'refreshSong', 'initialisingIsInProgress', 'defaultPreset']),
+      'refreshSong', 'refreshGigSongs', 'initialisingIsInProgress', 'defaultPreset']),
     songId: {
       get () {
         // this.$log.debug(` SongId GETTER is fired ---((( ${this.currentSongId}`)
@@ -248,21 +248,15 @@ export default {
         }
       }
     },
+    refreshGigSongs: async function (payload) {
+      if (!payload || payload.gigId !== this.selectedGigId) {
+        return
+      }
+      await this.reloadCurrentGigSongs()
+    },
     selectedGigId: async function (id) {
       if (id > 0) {
-        if (typeof this.gigList !== 'undefined') {
-          this.currentGig = await this.gigList.find(gig => gig.id === id)
-          if (!this.currentGig) return
-          if (!this.currentGig.songList) {
-            const songs = await this.getGigSongs(this.currentGig)
-            await this.$store.dispatch('populateGigSongs', { 'gigId': id, 'songs': songs })
-            this.currentGig = await this.gigList.find(gig => gig.id === id)
-          }
-          this.currentSongList = this.currentGig.songList
-          if (this.currentGig.songList && this.currentGig.songList.length > 0) {
-            this.songId = this.currentGig.songList[0].id
-          }
-        }
+        await this.reloadCurrentGigSongs()
       } else {
         if (this.songList && this.songList.length > 0) {
           this.currentSongList = this.songList
@@ -351,6 +345,26 @@ export default {
         }
       }
       return songs
+    },
+
+    async reloadCurrentGigSongs () {
+      const id = this.selectedGigId
+      if (id <= 0 || typeof this.gigList === 'undefined') {
+        return
+      }
+
+      this.currentGig = await this.gigList.find(gig => gig.id === id)
+      if (!this.currentGig) return
+
+      const songs = await this.getGigSongs(this.currentGig)
+      await this.$store.dispatch('populateGigSongs', { 'gigId': id, 'songs': songs })
+      this.currentSongList = songs
+      this.currentSong = songs.length > 0 ? songs[0] : null
+      if (songs.length > 0) {
+        this.songId = songs[0].id
+      } else {
+        this.$store.dispatch('setCurrentSongId', -1)
+      }
     },
 
     async setGigSong () {

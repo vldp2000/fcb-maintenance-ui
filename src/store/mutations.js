@@ -27,6 +27,12 @@ const mutations = {
   [types.REFRESH_SONG] (state, payload) {
     state.refreshSong = !state.refreshSong
   },
+  [types.REFRESH_GIG_SONGS] (state, gigId) {
+    state.refreshGigSongs = {
+      gigId,
+      sequence: state.refreshGigSongs.sequence + 1
+    }
+  },
 
   [types.ADD_SONG_ITEMS] (state, songPrograms) {
     try {

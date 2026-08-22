@@ -730,9 +730,10 @@ async function testSaveGigSongsWaitsForApiBeforeCommit () {
 
   deferred.resolve()
   await actionPromise
-  assert.strictEqual(commits.length, 1)
+  assert.strictEqual(commits.length, 2)
   assert.strictEqual(commits[0].type, 'UPDATE_GIG')
   assert.deepStrictEqual(commits[0].payload.shortSongList, [{ id: 10, sequencenumber: 1 }])
+  assert.deepStrictEqual(commits[1], { type: 'REFRESH_GIG_SONGS', payload: 1 })
 }
 
 async function testSetGigAsScheduledWaitsForApiBeforeCommit () {
@@ -825,6 +826,7 @@ function testGettersReturnStateAndPresetLookup () {
     allInitialized: true,
     initialisingIsInProgress: false,
     refreshSong: true,
+    refreshGigSongs: { gigId: 9, sequence: 1 },
     defaultPreset: { id: -1 },
     pedal1Value: 12,
     pedal2Value: 13,
@@ -846,6 +848,7 @@ function testGettersReturnStateAndPresetLookup () {
   assert.strictEqual(getters.initialisingIsInProgress(state), false)
   assert.strictEqual(getters.instrumentListImagesInitialized(state), true)
   assert.strictEqual(getters.refreshSong(state), true)
+  assert.deepStrictEqual(getters.refreshGigSongs(state), { gigId: 9, sequence: 1 })
   assert.deepStrictEqual(getters.defaultPreset(state), { id: -1 })
   assert.strictEqual(getters.pedal1Value(state), 12)
   assert.strictEqual(getters.pedal2Value(state), 13)
@@ -863,7 +866,8 @@ function testMutationsUpdateState () {
     gigSongList: [{ id: 1, name: 'Old Gig Song' }],
     allInitialized: false,
     initialisingIsInProgress: false,
-    refreshSong: false
+    refreshSong: false,
+    refreshGigSongs: { gigId: -1, sequence: 0 }
   }
 
   mutations.INIT_ALL(state)
@@ -880,6 +884,8 @@ function testMutationsUpdateState () {
   assert.deepStrictEqual(state.songList[0], { id: 2, name: 'Updated' })
   mutations.REFRESH_SONG(state)
   assert.strictEqual(state.refreshSong, true)
+  mutations.REFRESH_GIG_SONGS(state, 6)
+  assert.deepStrictEqual(state.refreshGigSongs, { gigId: 6, sequence: 1 })
   mutations.ADD_SONG_ITEMS(state, { songId: 2, programs: [{ id: 1 }] })
   assert.deepStrictEqual(state.songList[0].programList, [{ id: 1 }])
   mutations.UPDATE_SONGPROGRAM(state, { refsong: 2, id: 1, tytle: 'Verse' })
@@ -1873,6 +1879,55 @@ async function testGigControlPanelBlocksUiSelectionWithUnsavedChanges () {
   assert.strictEqual(context.songPickerOpen, false)
 }
 
+async function testGigControlPanelRefreshesOnlyMatchingGigSongList () {
+  const component = loadVueComponent('components/GigControlPanel.vue', {
+    '@/components/globals/Metronome': {}
+  }, {})
+  const songA = { id: 10, name: 'Song A', tempo: 120, programList: [] }
+  const songB = { id: 11, name: 'Song B', tempo: 100, programList: [] }
+  const selectedGig = {
+    id: 1,
+    shortSongList: [{ id: 11, sequencenumber: 1 }]
+  }
+  const context = makeComponentContext(component, {
+    songList: [songA, songB],
+    gigList: [
+      selectedGig,
+      { id: 2, shortSongList: [{ id: 10, sequencenumber: 1 }] }
+    ],
+    selectedGigId: 1,
+    currentGig: selectedGig,
+    currentSongList: [songA],
+    currentSongId: 10,
+    currentSong: songA
+  })
+  Object.defineProperty(context, 'songId', {
+    get () {
+      return component.computed.songId.get.call(this)
+    },
+    set (value) {
+      component.computed.songId.set.call(this, value)
+    }
+  })
+
+  await component.watch.refreshGigSongs.call(context, { gigId: 2, sequence: 1 })
+  assert.deepStrictEqual(context.currentSongList, [songA])
+  assert.strictEqual(context.currentSongId, 10)
+
+  await component.watch.refreshGigSongs.call(context, { gigId: 1, sequence: 2 })
+  assert.deepStrictEqual(context.dispatches.at(-2), {
+    type: 'populateGigSongs',
+    payload: { gigId: 1, songs: [songB] }
+  })
+  assert.deepStrictEqual(context.dispatches.at(-1), { type: 'setCurrentSongId', payload: 11 })
+  assert.deepStrictEqual(context.currentSongList, [songB])
+
+  selectedGig.shortSongList = []
+  await component.watch.refreshGigSongs.call(context, { gigId: 1, sequence: 3 })
+  assert.deepStrictEqual(context.currentSongList, [])
+  assert.deepStrictEqual(context.dispatches.at(-1), { type: 'setCurrentSongId', payload: -1 })
+}
+
 function testGigControlPanelRoutesPedalHighlightsByInstrumentSlot () {
   const source = readSrcFile('components/GigControlPanel.vue')
   const mobileSource = readSrcFile('components/MobileGigControlPanel.vue')
@@ -2149,6 +2204,7 @@ async function run () {
     testPresetControlBusinessMethods,
     testGigControlPanelBusinessMethods,
     testGigControlPanelBlocksUiSelectionWithUnsavedChanges,
+    testGigControlPanelRefreshesOnlyMatchingGigSongList,
     testGigControlPanelRoutesPedalHighlightsByInstrumentSlot,
     testMyKnobValueWatcherIsImmediateAndNormalizesValues,
     testVueComponentsUseLengthProperty,
