@@ -215,8 +215,17 @@ function makeActionsModule (serviceOverrides = {}) {
     emitted: [],
     socketHandlers: {}
   }
+  const socketInstance = {
+    emit (eventName, payload) {
+      serviceCalls.emitted.push({ eventName, payload })
+    },
+    on (eventName, handler) {
+      serviceCalls.socketHandlers[eventName] = handler
+    }
+  }
 
   const services = {
+    '@/store/socket-instance': socketInstance,
     '@/services/SongsService': {
       async getAllData () {
         return [makeValidSong()]

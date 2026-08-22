@@ -4,6 +4,7 @@ import SongsService from '@/services/SongsService'
 import InstrumentsService from '@/services/InstrumentsService'
 import InstrumentBankService from '@/services/InstrumentBankService'
 import PresetsService from '@/services/PresetsService'
+import socketClient from '@/store/socket-instance'
 import Vue from 'vue'
 import _sortBy from 'lodash/sortBy'
 
@@ -322,9 +323,7 @@ const actions = {
       }
       commit(types.UPDATE_GIG, gig)
       commit(types.REFRESH_GIG_SONGS, gig.id)
-      if (this && this._vm && this._vm.$socket && this._vm.$socket.client) {
-        this._vm.$socket.client.emit(config.viewGigChangedMessage, { gigId: gig.id })
-      }
+      socketClient.emit(config.viewGigChangedMessage, { gigId: gig.id })
     } catch (ex) {
       Vue.$log.error(ex)
     }
