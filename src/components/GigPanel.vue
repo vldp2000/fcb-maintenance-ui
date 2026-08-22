@@ -151,23 +151,29 @@ export default {
       }, 300)
     },
 
-    saveGig () {
+    async saveGig () {
       // this.$log.debug('saveGig () -------')
       // this.$log.debug(this.editedItem)
+      const savedGig = this.editedItem
       if (this.editedIndex > -1) {
         try {
           // GigsService.put(this.editedItem)
-          this.$store.dispatch('updateGig', this.editedItem)
+          await this.$store.dispatch('updateGig', savedGig)
         } catch (err) {
           this.$log.debug(err)
         }
       } else {
         try {
-          this.$store.dispatch('addGig', this.editedItem)
+          await this.$store.dispatch('addGig', savedGig)
         } catch (err) {
           this.$log.debug(err)
         }
       }
+      if (!savedGig.songList) {
+        savedGig.songList = []
+      }
+      this.selectedGig = savedGig
+      this.expanded = [savedGig]
       this.closeDialog()
     },
 
@@ -179,13 +185,15 @@ export default {
         this.expanded.pop()
       }
       // this.$log.debug(value)
-      if (oldGigId === value.id || !value.songList || value.songList.length === 0) {
-        this.$log.debug('empty ----')
-      } else {
-        // this.$log.debug('expand ----')
-        this.selectedGig = value
-        this.expanded.push(value)
+      if (oldGigId === value.id) {
+        return
       }
+      if (!value.songList) {
+        value.songList = []
+      }
+      // this.$log.debug('expand ----')
+      this.selectedGig = value
+      this.expanded.push(value)
     }
   }
 }

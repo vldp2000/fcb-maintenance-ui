@@ -1138,6 +1138,58 @@ async function testSongsPanelRowClickedLoadsProgramsBeforeExpand () {
   assert.deepStrictEqual(context.expanded, [song])
 }
 
+async function testGigPanelOpensSongSelectionForEmptyGig () {
+  const component = loadVueComponent('components/GigPanel.vue', {
+    '@/components/GigSongPanel': {}
+  }, {})
+  const emptyGig = {
+    id: 24,
+    name: 'New Gig',
+    songList: []
+  }
+  const context = makeComponentContext(component, {
+    gigList: [emptyGig],
+    expanded: [],
+    selectedGig: null
+  })
+
+  await context.rowClicked(emptyGig)
+
+  assert.strictEqual(context.selectedGig, emptyGig)
+  assert.deepStrictEqual(context.expanded, [emptyGig])
+}
+
+async function testGigPanelSaveNewGigOpensSongSelection () {
+  const component = loadVueComponent('components/GigPanel.vue', {
+    '@/components/GigSongPanel': {}
+  }, {})
+  const newGig = {
+    id: -1,
+    name: 'New Gig',
+    gigdate: '',
+    songList: []
+  }
+  const context = makeComponentContext(component, {
+    closeDialogCalled: 0,
+    closeDialog () {
+      this.closeDialogCalled += 1
+    }
+  })
+
+  context.editedIndex = -1
+  context.editedItem = newGig
+
+  await context.saveGig()
+
+  assert.deepStrictEqual(context.dispatches.at(-1), {
+    type: 'addGig',
+    payload: newGig
+  })
+  assert.strictEqual(context.selectedGig, newGig)
+  assert.deepStrictEqual(context.expanded, [newGig])
+  assert.strictEqual(context.closeDialogCalled, 1)
+}
+
 async function testPresetsPanelBusinessMethods () {
   const component = loadVueComponent('components/PresetsPanel.vue', {}, {})
   const presetA = {
@@ -1690,6 +1742,8 @@ async function run () {
     testSingleOrDoubleRowClickCallbacks,
     testSongsPanelSaveSongChoosesAddOrUpdate,
     testSongsPanelRowClickedLoadsProgramsBeforeExpand,
+    testGigPanelOpensSongSelectionForEmptyGig,
+    testGigPanelSaveNewGigOpensSongSelection,
     testPresetsPanelBusinessMethods,
     testPresetControlBusinessMethods,
     testGigControlPanelBusinessMethods,
