@@ -481,7 +481,7 @@ export default {
     display: flex;
     margin: 0px;
     padding: 0px;
-    padding-top: 14px;
+    padding-top: 10px;
     margin-left: 8px;
     text-align: left;
     justify-content: flex-start;

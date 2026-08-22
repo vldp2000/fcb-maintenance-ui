@@ -2191,7 +2191,7 @@ function testPresetNameHasInstrumentGap () {
 
   assert(source.includes('.presetHeader .presetName'), 'PresetControl.vue should use a specific preset name selector that is not overridden by mobile styles')
   assert(source.includes('margin-left: 8px;'), 'PresetControl.vue should keep the instrument image close to the preset name')
-  assert(source.includes('padding-top: 14px;'), 'PresetControl.vue should keep the preset name visually close to the knob row')
+  assert(source.includes('padding-top: 10px;'), 'PresetControl.vue should keep the preset name visually close to the top of the card')
   assert(source.includes('.presetHeader .instrumentImage'), 'PresetControl.vue should keep desktop instrument image layout specific to the preset header')
   assert(source.includes('margin-top: 0px;'), 'PresetControl.vue should keep the instrument image above the volume gauge')
   assert(source.includes('class="instrumentIconImage"'), 'PresetControl.vue should constrain the Vuetify image itself')
