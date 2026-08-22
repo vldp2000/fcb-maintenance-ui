@@ -695,7 +695,7 @@ async function testUpdateGigWaitsForApiBeforeCommit () {
   assert.deepStrictEqual(commits, [{ type: 'UPDATE_GIG', payload: gig }])
 }
 
-async function testResetGigSongsWaitsForApiBeforeCommit () {
+async function testSaveGigSongsWaitsForApiBeforeCommit () {
   const deferred = makeDeferred()
   const gig = {
     id: 1,
@@ -716,7 +716,7 @@ async function testResetGigSongsWaitsForApiBeforeCommit () {
   })
   const commits = []
 
-  const actionPromise = actions.resetGigSongs({
+  const actionPromise = actions.saveGigSongs({
     commit: (type, payload) => commits.push({ type, payload }),
     getters: {
       songList: [song]
@@ -1292,6 +1292,60 @@ async function testGigPanelOpensSongSelectionForEmptyGig () {
   assert.deepStrictEqual(context.expanded, [emptyGig])
 }
 
+async function testGigPanelNewItemResetsEditState () {
+  const component = loadVueComponent('components/GigPanel.vue', {
+    '@/components/GigSongPanel': {}
+  }, {})
+  const context = makeComponentContext(component)
+
+  context.editedIndex = 2
+  context.editedItem = { id: 7, name: 'Existing Gig', gigdate: '2026-08-22' }
+
+  context.newItem()
+
+  assert.strictEqual(context.editedIndex, -1)
+  assert.deepStrictEqual(context.editedItem, context.defaultItem)
+  assert.notStrictEqual(context.editedItem, context.defaultItem)
+  assert.strictEqual(context.dialog, true)
+}
+
+async function testGigPanelSaveShowsProgressAndIgnoresDuplicateSubmit () {
+  const component = loadVueComponent('components/GigPanel.vue', {
+    '@/components/GigSongPanel': {}
+  }, {})
+  let resolveDispatch
+  const context = makeComponentContext(component, {
+    $store: {
+      dispatch (type, payload) {
+        context.dispatches.push({ type, payload })
+        return new Promise(resolve => {
+          resolveDispatch = resolve
+        })
+      }
+    },
+    closeDialog () {}
+  })
+
+  context.editedIndex = -1
+  context.editedItem = { id: -1, name: 'New Gig', songList: [] }
+
+  const firstSave = context.saveGig()
+  const secondSave = context.saveGig()
+
+  assert.strictEqual(context.savingGigMessage, 'Saving gig...')
+  assert.strictEqual(context.dispatches.length, 1)
+
+  resolveDispatch()
+  await firstSave
+  await secondSave
+
+  assert.strictEqual(context.savingGigMessage, '')
+  assert.deepStrictEqual(context.dispatches, [{
+    type: 'addGig',
+    payload: context.editedItem
+  }])
+}
+
 async function testGigPanelSaveNewGigOpensSongSelection () {
   const component = loadVueComponent('components/GigPanel.vue', {
     '@/components/GigSongPanel': {}
@@ -1321,6 +1375,114 @@ async function testGigPanelSaveNewGigOpensSongSelection () {
   assert.strictEqual(context.selectedGig, newGig)
   assert.deepStrictEqual(context.expanded, [newGig])
   assert.strictEqual(context.closeDialogCalled, 1)
+}
+
+async function testGigPanelDialogSaveExistingGigAndSongs () {
+  const component = loadVueComponent('components/GigPanel.vue', {
+    '@/components/GigSongPanel': {}
+  }, {})
+  const songList = [{ id: 1, name: 'Song' }]
+  const existingGig = {
+    id: 10,
+    name: 'Existing Gig',
+    gigdate: '2026-08-22',
+    songList
+  }
+  const context = makeComponentContext(component, {
+    closeDialog () {}
+  })
+
+  context.editedIndex = 0
+  context.editedItem = existingGig
+
+  await context.saveGig()
+
+  assert.deepStrictEqual(context.dispatches.at(-1), {
+    type: 'saveGigSongs',
+    payload: {
+      gig: existingGig,
+      songList
+    }
+  })
+}
+
+async function testGigPanelRowSaveUpdatesExistingGigAndSongs () {
+  const component = loadVueComponent('components/GigPanel.vue', {
+    '@/components/GigSongPanel': {}
+  }, {})
+  const songList = [{ id: 1, name: 'Song' }]
+  const existingGig = { id: 10, name: 'Existing Gig', gigdate: '2026-08-22', songList }
+  const context = makeComponentContext(component)
+
+  await context.saveGigRow(existingGig)
+
+  assert.deepStrictEqual(context.dispatches.at(-1), {
+    type: 'saveGigSongs',
+    payload: {
+      gig: existingGig,
+      songList
+    }
+  })
+}
+
+function testGigPanelShowsFriendlyActionsAndSongCount () {
+  const component = loadVueComponent('components/GigPanel.vue', {
+    '@/components/GigSongPanel': {}
+  }, {})
+  const source = readSrcFile('components/GigPanel.vue')
+  const context = makeComponentContext(component)
+
+  assert.strictEqual(context.getGigSongCount({ songList: [{ id: 1 }, { id: 2 }] }), 2)
+  assert.strictEqual(context.getGigSongCount({ shortSongList: [{ id: 1 }] }), 1)
+  assert.strictEqual(context.getGigSongCount({}), 0)
+  assert(source.includes('v-slot:item.songs'), 'GigPanel.vue should show a songs-count column')
+  assert(source.includes('v-slot:item.songActions'), 'GigPanel.vue should show an explicit songs action')
+  assert(source.includes('v-slot:item.save'), 'GigPanel.vue should show a row save action')
+  assert(source.includes('rowActionButton'), 'GigPanel.vue should render bordered action buttons')
+}
+
+async function testGigSongPanelSaveOrderShowsProgress () {
+  const component = loadVueComponent('components/GigSongPanel.vue', {}, {})
+  let resolveDispatch
+  const gig = { id: 7, name: 'Gig', songList: [] }
+  const context = makeComponentContext(component, {
+    gig,
+    gigSonglist: [{ id: 1, name: 'Song' }],
+    $store: {
+      dispatch (type, payload) {
+        context.dispatches.push({ type, payload })
+        return new Promise(resolve => {
+          resolveDispatch = resolve
+        })
+      }
+    }
+  })
+
+  const savePromise = context.saveOrder()
+
+  assert.strictEqual(context.savingOrder, true)
+  assert.strictEqual(context.savingOrderMessage, 'Saving gig songs...')
+  assert.deepStrictEqual(context.dispatches.at(-1), {
+    type: 'saveGigSongs',
+    payload: { gig, songList: context.gigSonglist }
+  })
+
+  resolveDispatch()
+  await savePromise
+
+  assert.strictEqual(context.savingOrder, false)
+  assert.strictEqual(context.savingOrderMessage, '')
+}
+
+function testGigSongPanelUsesScrollableSongGridsAndOrderColumn () {
+  const source = readSrcFile('components/GigSongPanel.vue')
+
+  assert(source.includes('<th scope="col">Order</th>'), 'GigSongPanel.vue should show song order numbers')
+  assert(source.includes('v-for="(item, index) in gigSonglist"'), 'GigSongPanel.vue should calculate order from the selected song position')
+  assert(source.includes('{{ index + 1 }}'), 'GigSongPanel.vue should render one-based order numbers')
+  assert(source.includes('class="songGridScroller"'), 'GigSongPanel.vue should wrap both song grids in independent scrollers')
+  assert(source.includes('overflow-y: auto;'), 'GigSongPanel.vue should make the song grids independently scrollable')
+  assert(source.includes('class="saveOrderButton"'), 'GigSongPanel.vue should render a styled bottom save button')
 }
 
 async function testPresetsPanelBusinessMethods () {
@@ -1861,7 +2023,7 @@ async function run () {
     testUpdatePresetWaitsForApiBeforeCommit,
     testUpdateInstrumentBankWaitsForApiBeforeCommit,
     testUpdateGigWaitsForApiBeforeCommit,
-    testResetGigSongsWaitsForApiBeforeCommit,
+    testSaveGigSongsWaitsForApiBeforeCommit,
     testSetGigAsScheduledWaitsForApiBeforeCommit,
     testAddSongItemsLoadsSongPrograms,
     testSocketActionsEmitAndSubscribe,
@@ -1881,7 +2043,14 @@ async function run () {
     testSongsPanelRowSaveUpdatesExistingSong,
     testSongsPanelRowClickedLoadsProgramsBeforeExpand,
     testGigPanelOpensSongSelectionForEmptyGig,
+    testGigPanelNewItemResetsEditState,
+    testGigPanelSaveShowsProgressAndIgnoresDuplicateSubmit,
     testGigPanelSaveNewGigOpensSongSelection,
+    testGigPanelDialogSaveExistingGigAndSongs,
+    testGigPanelRowSaveUpdatesExistingGigAndSongs,
+    testGigPanelShowsFriendlyActionsAndSongCount,
+    testGigSongPanelSaveOrderShowsProgress,
+    testGigSongPanelUsesScrollableSongGridsAndOrderColumn,
     testPresetsPanelBusinessMethods,
     testPresetControlBusinessMethods,
     testGigControlPanelBusinessMethods,

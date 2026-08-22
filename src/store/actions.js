@@ -299,7 +299,7 @@ const actions = {
     commit(types.UPDATE_GIGSONG, gigsong)
   },
 
-  async resetGigSongs ({ commit, getters }, payload) { // {}  gigId, songList)
+  async saveGigSongs ({ commit, getters }, payload) { // {}  gigId, songList)
     try {
       var gig = Object.assign({}, payload.gig)
       if (!gig.shortSongList) {
@@ -324,6 +324,9 @@ const actions = {
     } catch (ex) {
       Vue.$log.error(ex)
     }
+  },
+  async resetGigSongs ({ dispatch }, payload) {
+    await dispatch('saveGigSongs', payload)
   },
 
   //  Set current Gig Id-----------------------------------------------------

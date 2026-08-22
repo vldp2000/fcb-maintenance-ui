@@ -1,14 +1,24 @@
 <template>
   <v-container fluid>
+    <v-snackbar
+      v-model="savingOrder"
+      timeout="-1"
+      color="info"
+      top
+    >
+      {{ savingOrderMessage }}
+    </v-snackbar>
     <v-row no-gutters>
       <v-col cols="12" md="6">
-        <div class="row">
-          <div class="col-8">
+        <div class="songGridColumn">
+          <div class="songGridHeader">
             <h3>Set the order of Songs</h3>
-
+          </div>
+          <div class="songGridScroller">
             <table class="table table-striped table-bordered">
               <thead class="thead-dark">
                 <tr>
+                  <th scope="col">Order</th>
                   <th scope="col">Id</th>
                   <th scope="col">Name</th>
                 </tr>
@@ -18,20 +28,35 @@
                 tag="tbody"
                 group="songs"
               >
-                <tr v-for="item in gigSonglist" :key="item.id">
+                <tr v-for="(item, index) in gigSonglist" :key="item.id">
+                  <td scope="row">{{ index + 1 }}</td>
                   <td scope="row">{{ item.id }}</td>
                   <td>{{ item.name }}</td>
                 </tr>
-                <button slot="footer" @click="saveOrder">Save </button>
               </draggable>
             </table>
+          </div>
+          <div class="songGridActions">
+            <v-btn
+              color="primary"
+              large
+              class="saveOrderButton"
+              :loading="savingOrder"
+              :disabled="savingOrder"
+              @click="saveOrder"
+            >
+              <v-icon left>save</v-icon>
+              Save Gig
+            </v-btn>
           </div>
         </div>
       </v-col>
        <v-col cols="12" md="6">
-        <div class="row">
-          <div class="col-8">
+        <div class="songGridColumn">
+          <div class="songGridHeader">
             <h3>All Songs</h3>
+          </div>
+          <div class="songGridScroller">
             <table class="table table-striped table-bordered">
               <thead class="thead-dark">
                 <tr>
@@ -79,6 +104,8 @@ export default {
   data () {
     return {
       dragging: false,
+      savingOrder: false,
+      savingOrderMessage: '',
       gigSonglist: [],
       allSongList: []
     }
@@ -119,14 +146,24 @@ export default {
       }
     },
 
-    saveOrder: function () {
+    saveOrder: async function () {
       // console.log('------ save -----------')
       // console.log(this.gigSonglist)
       // console.log(this.songList)
       // console.log(this.gig)
       // console.log('------ save -----------')
-      const payload = { 'gig': this.gig, 'songList': this.gigSonglist }
-      this.$store.dispatch('resetGigSongs', payload)
+      if (this.savingOrder) {
+        return
+      }
+      this.savingOrder = true
+      this.savingOrderMessage = 'Saving gig songs...'
+      try {
+        const payload = { 'gig': this.gig, 'songList': this.gigSonglist }
+        await this.$store.dispatch('saveGigSongs', payload)
+      } finally {
+        this.savingOrder = false
+        this.savingOrderMessage = ''
+      }
     },
     checkMove: function (e) {
       this.$log.debug(`Future index:  ${e.draggedContext.futureIndex}`)
@@ -143,6 +180,32 @@ export default {
   }
   .buttons {
     margin-top: 35px;
+  }
+  .songGridColumn {
+    display: flex;
+    flex-direction: column;
+    height: 560px;
+    padding: 0 14px;
+  }
+  .songGridHeader {
+    min-height: 44px;
+  }
+  .songGridScroller {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid #d7dce8;
+    border-radius: 4px;
+    background: #fff;
+  }
+  .songGridActions {
+    position: sticky;
+    bottom: 0;
+    padding: 14px 0 4px;
+    background: #fff;
+  }
+  .saveOrderButton {
+    min-width: 210px;
+    font-weight: 700;
   }
   tr:nth-child(even) {
     background-color: #f2f2f2;

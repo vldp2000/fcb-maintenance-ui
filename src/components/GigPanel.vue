@@ -32,7 +32,7 @@
           <v-spacer></v-spacer>
           <v-dialog v-model="dialog" max-width="500px">
             <template v-slot:activator="{ on }">
-              <v-btn color="primary" dark class="mb-2" v-on="on">New Item</v-btn>
+              <v-btn color="primary" dark class="mb-2" v-on="on" @click="newItem">New Gig</v-btn>
             </template>
             <v-card>
               <v-card-title>
@@ -40,6 +40,14 @@
               </v-card-title>
 
               <v-card-text>
+                <v-alert
+                  v-if="savingGigMessage"
+                  dense
+                  text
+                  type="info"
+                >
+                  {{ savingGigMessage }}
+                </v-alert>
                 <v-container>
                   <v-row>
                     <v-col cols="12" sm="6" md="4">
@@ -63,13 +71,44 @@
           </v-dialog>
         </v-toolbar>
       </template>
-      <template v-slot:item.action="{ item }">
-        <v-icon
-          class="mr-2"
-          @click="editItem(item)"
+      <template v-slot:item.songs="{ item }">
+        <div class="customTableCell">{{ getGigSongCount(item) }}</div>
+      </template>
+      <template v-slot:item.songActions="{ item }">
+        <v-btn
+          outlined
+          small
+          color="primary"
+          class="rowActionButton mr-1"
+          @click.stop="openSongs(item)"
         >
-          edit
-        </v-icon>
+          <v-icon small left>queue_music</v-icon>
+          Songs
+        </v-btn>
+      </template>
+      <template v-slot:item.action="{ item }">
+        <v-btn
+          outlined
+          small
+          color="primary"
+          class="rowActionButton mr-1"
+          @click.stop="editItem(item)"
+        >
+          <v-icon small left>edit</v-icon>
+          Edit
+        </v-btn>
+      </template>
+      <template v-slot:item.save="{ item }">
+        <v-btn
+          outlined
+          small
+          color="primary"
+          class="rowActionButton mr-1"
+          @click.stop="saveGigRow(item)"
+        >
+          <v-icon small left>save</v-icon>
+          Save
+        </v-btn>
       </template>
     </v-data-table>
   </custom-panel>
@@ -90,6 +129,8 @@ export default {
       dialog: false,
       expanded: [],
       singleExpand: true,
+      savingGig: false,
+      savingGigMessage: '',
       headers: [
         {
           text: 'Name',
@@ -98,7 +139,10 @@ export default {
           value: 'name'
         },
         { text: 'Date', value: 'gigdate' },
-        { text: 'Action', value: 'action' }
+        { text: 'Songs', value: 'songs', sortable: false },
+        { text: 'Song List', value: 'songActions', sortable: false },
+        { text: 'Action', value: 'action', sortable: false },
+        { text: 'Save', value: 'save', sortable: false }
       ],
 
       editedIndex: -1,
@@ -134,6 +178,12 @@ export default {
   },
 
   methods: {
+    newItem () {
+      this.editedIndex = -1
+      this.editedItem = Object.assign({}, this.defaultItem)
+      this.dialog = true
+    },
+
     editItem (item) {
       // this.$log.debug(item)
       this.editedIndex = this.gigList.indexOf(item)
@@ -152,29 +202,72 @@ export default {
     },
 
     async saveGig () {
+      if (this.savingGig) {
+        return
+      }
+      this.savingGig = true
+      this.savingGigMessage = 'Saving gig...'
       // this.$log.debug('saveGig () -------')
       // this.$log.debug(this.editedItem)
       const savedGig = this.editedItem
-      if (this.editedIndex > -1) {
-        try {
+      try {
+        if (this.editedIndex > -1) {
           // GigsService.put(this.editedItem)
-          await this.$store.dispatch('updateGig', savedGig)
-        } catch (err) {
-          this.$log.debug(err)
-        }
-      } else {
-        try {
+          await this.$store.dispatch('saveGigSongs', {
+            gig: savedGig,
+            songList: savedGig.songList || savedGig.shortSongList || []
+          })
+        } else {
           await this.$store.dispatch('addGig', savedGig)
-        } catch (err) {
-          this.$log.debug(err)
         }
+      } catch (err) {
+        this.$log.debug(err)
       }
       if (!savedGig.songList) {
         savedGig.songList = []
       }
       this.selectedGig = savedGig
       this.expanded = [savedGig]
+      this.savingGig = false
+      this.savingGigMessage = ''
       this.closeDialog()
+    },
+
+    async saveGigRow (gig) {
+      if (this.savingGig) {
+        return
+      }
+      this.savingGig = true
+      this.savingGigMessage = 'Saving gig...'
+      try {
+        await this.$store.dispatch('saveGigSongs', {
+          gig,
+          songList: gig.songList || gig.shortSongList || []
+        })
+      } catch (err) {
+        this.$log.debug(err)
+      } finally {
+        this.savingGig = false
+        this.savingGigMessage = ''
+      }
+    },
+
+    getGigSongCount (gig) {
+      if (gig && gig.songList) {
+        return gig.songList.length
+      }
+      if (gig && gig.shortSongList) {
+        return gig.shortSongList.length
+      }
+      return 0
+    },
+
+    openSongs (gig) {
+      if (!gig.songList) {
+        gig.songList = []
+      }
+      this.selectedGig = gig
+      this.expanded = [gig]
     },
 
     async rowClicked (value) {
@@ -213,6 +306,14 @@ export default {
   }
   .v-data-table td {
     font-size: 20px;
+  }
+  .customTableCell {
+    font-size: 20px !important;
+  }
+  .rowActionButton {
+    min-width: 94px;
+    border-width: 1px;
+    font-weight: 600;
   }
 
 </style>
