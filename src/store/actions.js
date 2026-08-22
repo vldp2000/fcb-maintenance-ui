@@ -322,6 +322,9 @@ const actions = {
       }
       commit(types.UPDATE_GIG, gig)
       commit(types.REFRESH_GIG_SONGS, gig.id)
+      if (this && this._vm && this._vm.$socket && this._vm.$socket.client) {
+        this._vm.$socket.client.emit(config.viewGigChangedMessage, { gigId: gig.id })
+      }
     } catch (ex) {
       Vue.$log.error(ex)
     }

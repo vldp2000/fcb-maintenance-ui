@@ -736,6 +736,34 @@ async function testSaveGigSongsWaitsForApiBeforeCommit () {
   assert.deepStrictEqual(commits[1], { type: 'REFRESH_GIG_SONGS', payload: 1 })
 }
 
+async function testSaveGigSongsEmitsGigChangedNotification () {
+  const { actions, context, serviceCalls } = makeSocketActionContext()
+  const song = {
+    id: 10,
+    name: 'Song'
+  }
+  const gig = {
+    id: 7,
+    name: 'Gig',
+    shortSongList: [],
+    songList: []
+  }
+
+  await actions.saveGigSongs.call(context, {
+    commit () {},
+    getters: {
+      songList: [song]
+    }
+  }, {
+    gig,
+    songList: [song]
+  })
+
+  assert.deepStrictEqual(serviceCalls.emitted, [
+    { eventName: 'VIEW_GIG_CHANGED_MESSAGE', payload: { gigId: 7 } }
+  ])
+}
+
 async function testSetGigAsScheduledWaitsForApiBeforeCommit () {
   const deferred = makeDeferred()
   const { actions } = makeActionsModule({
@@ -2214,6 +2242,7 @@ async function run () {
     testUpdateInstrumentBankWaitsForApiBeforeCommit,
     testUpdateGigWaitsForApiBeforeCommit,
     testSaveGigSongsWaitsForApiBeforeCommit,
+    testSaveGigSongsEmitsGigChangedNotification,
     testSetGigAsScheduledWaitsForApiBeforeCommit,
     testAddSongItemsLoadsSongPrograms,
     testSocketActionsEmitAndSubscribe,
