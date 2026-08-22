@@ -1477,12 +1477,101 @@ async function testGigSongPanelSaveOrderShowsProgress () {
 function testGigSongPanelUsesScrollableSongGridsAndOrderColumn () {
   const source = readSrcFile('components/GigSongPanel.vue')
 
-  assert(source.includes('<th scope="col">Order</th>'), 'GigSongPanel.vue should show song order numbers')
+  assert(source.includes('class="orderColumn">Order</th>'), 'GigSongPanel.vue should show song order numbers')
   assert(source.includes('v-for="(item, index) in gigSonglist"'), 'GigSongPanel.vue should calculate order from the selected song position')
   assert(source.includes('{{ index + 1 }}'), 'GigSongPanel.vue should render one-based order numbers')
   assert(source.includes('class="songGridScroller"'), 'GigSongPanel.vue should wrap both song grids in independent scrollers')
   assert(source.includes('overflow-y: auto;'), 'GigSongPanel.vue should make the song grids independently scrollable')
   assert(source.includes('class="saveOrderButton"'), 'GigSongPanel.vue should render a styled bottom save button')
+}
+
+function testGigSongPanelAllocatesAfterSelectedSong () {
+  const component = loadVueComponent('components/GigSongPanel.vue', {}, {})
+  const context = makeComponentContext(component, {
+    gigSonglist: [
+      { id: 1, name: 'First' },
+      { id: 3, name: 'Third' }
+    ],
+    allSongList: [
+      { id: 2, name: 'Second' },
+      { id: 4, name: 'Fourth' }
+    ],
+    selectedGigSongId: 1
+  })
+
+  context.allocateSong(context.allSongList[0])
+
+  assert.deepStrictEqual(context.gigSonglist.map(song => song.id), [1, 2, 3])
+  assert.deepStrictEqual(context.allSongList.map(song => song.id), [4])
+  assert.strictEqual(context.selectedGigSongId, 1)
+}
+
+function testGigSongPanelUnallocatesAndMaintainsSelection () {
+  const component = loadVueComponent('components/GigSongPanel.vue', {}, {})
+  const context = makeComponentContext(component, {
+    gigSonglist: [
+      { id: 1, name: 'First' },
+      { id: 2, name: 'Second' }
+    ],
+    allSongList: [
+      { id: 4, name: 'Fourth' }
+    ],
+    selectedGigSongId: 2
+  })
+
+  context.unallocateSong(context.gigSonglist[1])
+
+  assert.deepStrictEqual(context.gigSonglist.map(song => song.id), [1])
+  assert.deepStrictEqual(context.allSongList.map(song => song.id), [2, 4])
+  assert.strictEqual(context.selectedGigSongId, 1)
+}
+
+function testGigSongPanelMovesSongsWithinGig () {
+  const component = loadVueComponent('components/GigSongPanel.vue', {}, {})
+  const context = makeComponentContext(component, {
+    gigSonglist: [
+      { id: 1, name: 'First' },
+      { id: 2, name: 'Second' },
+      { id: 3, name: 'Third' }
+    ]
+  })
+
+  context.moveSongDown(0)
+  assert.deepStrictEqual(context.gigSonglist.map(song => song.id), [2, 1, 3])
+
+  context.moveSongUp(2)
+  assert.deepStrictEqual(context.gigSonglist.map(song => song.id), [2, 3, 1])
+}
+
+function testGigSongPanelReallocatesUnderSelectedWithoutChangingSelection () {
+  const component = loadVueComponent('components/GigSongPanel.vue', {}, {})
+  const context = makeComponentContext(component, {
+    gigSonglist: [
+      { id: 1, name: 'First' },
+      { id: 2, name: 'Second' },
+      { id: 3, name: 'Third' },
+      { id: 4, name: 'Fourth' }
+    ],
+    selectedGigSongId: 3
+  })
+
+  context.reallocateSong(context.gigSonglist[0])
+
+  assert.deepStrictEqual(context.gigSonglist.map(song => song.id), [2, 3, 1, 4])
+  assert.strictEqual(context.selectedGigSongId, 3)
+}
+
+function testGigSongPanelRendersSongAssignmentControls () {
+  const source = readSrcFile('components/GigSongPanel.vue')
+
+  assert(source.includes('@dblclick="allocateSong(item)"'), 'All Songs rows should allocate on double-click')
+  assert(source.includes('@click.stop="allocateSong(item)"'), 'All Songs rows should have an allocate button')
+  assert(source.includes('@click="selectGigSong(item)"'), 'Gig song rows should select on click')
+  assert(source.includes('selectedSongRow'), 'Gig song rows should have selected-row styling')
+  assert(source.includes('@click.stop="moveSongUp(index)"'), 'Gig song rows should have an up button')
+  assert(source.includes('@click.stop="moveSongDown(index)"'), 'Gig song rows should have a down button')
+  assert(source.includes('@click.stop="reallocateSong(item)"'), 'Gig song rows should have a reallocate button')
+  assert(source.includes('@click.stop="unallocateSong(item)"'), 'Gig song rows should have an unallocate button')
 }
 
 async function testPresetsPanelBusinessMethods () {
@@ -2051,6 +2140,11 @@ async function run () {
     testGigPanelShowsFriendlyActionsAndSongCount,
     testGigSongPanelSaveOrderShowsProgress,
     testGigSongPanelUsesScrollableSongGridsAndOrderColumn,
+    testGigSongPanelAllocatesAfterSelectedSong,
+    testGigSongPanelUnallocatesAndMaintainsSelection,
+    testGigSongPanelMovesSongsWithinGig,
+    testGigSongPanelReallocatesUnderSelectedWithoutChangingSelection,
+    testGigSongPanelRendersSongAssignmentControls,
     testPresetsPanelBusinessMethods,
     testPresetControlBusinessMethods,
     testGigControlPanelBusinessMethods,
