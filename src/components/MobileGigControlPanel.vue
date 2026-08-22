@@ -278,8 +278,9 @@ export default {
     this.initMessageSocket()
   },
 
-  mounted () {
-    this.initAllData()
+  async mounted () {
+    await this.initAllData()
+    await this.initGigControlSelection()
   },
 
   methods: {
@@ -364,6 +365,16 @@ export default {
         this.songId = songs[0].id
       } else {
         this.$store.dispatch('setCurrentSongId', -1)
+      }
+    },
+
+    async initGigControlSelection () {
+      if (this.selectedGigId > 0) {
+        await this.reloadCurrentGigSongs()
+        return
+      }
+      if (this.allInitialized) {
+        await this.setGigSong()
       }
     },
 

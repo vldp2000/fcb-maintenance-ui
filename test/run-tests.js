@@ -1928,6 +1928,47 @@ async function testGigControlPanelRefreshesOnlyMatchingGigSongList () {
   assert.deepStrictEqual(context.dispatches.at(-1), { type: 'setCurrentSongId', payload: -1 })
 }
 
+async function testGigControlPanelInitializesSelectedGigSongListOnMount () {
+  const component = loadVueComponent('components/GigControlPanel.vue', {
+    '@/components/globals/Metronome': {}
+  }, {})
+  const songA = { id: 10, name: 'Song A', tempo: 120, programList: [] }
+  const songB = { id: 11, name: 'Song B', tempo: 100, programList: [] }
+  const selectedGig = {
+    id: 1,
+    name: 'Small Gig',
+    shortSongList: [{ id: 11, sequencenumber: 1 }]
+  }
+  const context = makeComponentContext(component, {
+    allInitialized: true,
+    initialisingIsInProgress: false,
+    selectedGigId: 1,
+    currentSongId: 10,
+    currentSong: songA,
+    currentSongList: [songA],
+    songList: [songA, songB],
+    gigList: [selectedGig]
+  })
+  Object.defineProperty(context, 'songId', {
+    get () {
+      return component.computed.songId.get.call(this)
+    },
+    set (value) {
+      component.computed.songId.set.call(this, value)
+    }
+  })
+
+  await component.mounted.call(context)
+
+  assert.deepStrictEqual(context.currentGig, selectedGig)
+  assert.deepStrictEqual(context.currentSongList, [songB])
+  assert.deepStrictEqual(context.dispatches.at(-2), {
+    type: 'populateGigSongs',
+    payload: { gigId: 1, songs: [songB] }
+  })
+  assert.deepStrictEqual(context.dispatches.at(-1), { type: 'setCurrentSongId', payload: 11 })
+}
+
 function testGigControlPanelRoutesPedalHighlightsByInstrumentSlot () {
   const source = readSrcFile('components/GigControlPanel.vue')
   const mobileSource = readSrcFile('components/MobileGigControlPanel.vue')
@@ -2205,6 +2246,7 @@ async function run () {
     testGigControlPanelBusinessMethods,
     testGigControlPanelBlocksUiSelectionWithUnsavedChanges,
     testGigControlPanelRefreshesOnlyMatchingGigSongList,
+    testGigControlPanelInitializesSelectedGigSongListOnMount,
     testGigControlPanelRoutesPedalHighlightsByInstrumentSlot,
     testMyKnobValueWatcherIsImmediateAndNormalizesValues,
     testVueComponentsUseLengthProperty,
