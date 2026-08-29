@@ -1951,15 +1951,16 @@ async function testGigControlPanelBusinessMethods () {
   context.onProgramClick(3)
   context.selectSong()
   context.saveGigAsCurrent()
-  context.saveSong()
-  assert.deepStrictEqual(context.dispatches.slice(-4), [
+  await context.saveSong()
+  assert.deepStrictEqual(context.dispatches.slice(-5), [
     { type: 'selectSongProgram', payload: 3 },
     { type: 'selectSong', payload: 10 },
     { type: 'setGigAsScheduled', payload: 1 },
-    { type: 'updateSong', payload: songA }
+    { type: 'updateSong', payload: songA },
+    { type: 'selectSong', payload: 10 }
   ])
   assert.strictEqual(context.dataChanged, false)
-  assert.strictEqual(context.songReloadPending, true)
+  assert.strictEqual(context.songReloadPending, false)
 
   context.selectSong()
   assert.strictEqual(context.songReloadPending, false)
@@ -2013,15 +2014,70 @@ async function testGigControlPanelBlocksUiSelectionWithUnsavedChanges () {
   assert.strictEqual(context.unsavedChangesMessage, 'Save the current song changes before selecting another gig.')
 
   context.unsavedChangesDialog = false
-  context.chooseSong(songB)
+  await context.chooseSong(songB)
   assert.strictEqual(context.dispatches.length, 0)
   assert.strictEqual(context.songPickerOpen, true)
   assert.strictEqual(context.unsavedChangesDialog, true)
 
   context.dataChanged = false
-  context.chooseSong(songB)
-  assert.deepStrictEqual(context.dispatches.at(-1), { type: 'setCurrentSongId', payload: 11 })
+  await context.chooseSong(songB)
+  assert.deepStrictEqual(context.dispatches.slice(-2), [
+    { type: 'setCurrentSongId', payload: 11 },
+    { type: 'selectSong', payload: 11 }
+  ])
   assert.strictEqual(context.songPickerOpen, false)
+}
+
+async function testGigControlPanelPopupSelectionSendsSongMessageForCurrentSong () {
+  const component = loadVueComponent('components/GigControlPanel.vue')
+  const songA = { id: 10, name: 'Song A', tempo: 120, programList: [] }
+  const context = makeComponentContext(component, {
+    currentSongId: 10,
+    currentSong: songA,
+    currentSongList: [songA],
+    dataChanged: false,
+    songPickerOpen: true
+  })
+
+  await context.chooseSong(songA)
+
+  assert.deepStrictEqual(context.dispatches.slice(-2), [
+    { type: 'setCurrentSongId', payload: 10 },
+    { type: 'selectSong', payload: 10 }
+  ])
+  assert.strictEqual(context.songPickerOpen, false)
+}
+
+async function testGigControlPanelAdjacentSongButtonsWrapWithinGigSongs () {
+  const component = loadVueComponent('components/GigControlPanel.vue')
+  const songA = { id: 10, name: 'Song A', tempo: 120, programList: [] }
+  const songB = { id: 11, name: 'Song B', tempo: 100, programList: [] }
+  const songC = { id: 12, name: 'Song C', tempo: 90, programList: [] }
+  const context = makeComponentContext(component, {
+    currentSongId: 10,
+    currentSong: songA,
+    currentSongList: [songA, songB, songC],
+    dataChanged: false,
+    songPickerOpen: false
+  })
+  Object.defineProperty(context, 'songPickerSongs', {
+    get () {
+      return component.computed.songPickerSongs.get.call(this)
+    }
+  })
+
+  await context.selectPreviousSong()
+  assert.deepStrictEqual(context.dispatches.slice(-2), [
+    { type: 'setCurrentSongId', payload: 12 },
+    { type: 'selectSong', payload: 12 }
+  ])
+
+  context.currentSongId = 12
+  await context.selectNextSong()
+  assert.deepStrictEqual(context.dispatches.slice(-2), [
+    { type: 'setCurrentSongId', payload: 10 },
+    { type: 'selectSong', payload: 10 }
+  ])
 }
 
 async function testGigControlPanelRefreshesOnlyMatchingGigSongList () {
@@ -2398,6 +2454,8 @@ async function run () {
     testPresetControlBusinessMethods,
     testGigControlPanelBusinessMethods,
     testGigControlPanelBlocksUiSelectionWithUnsavedChanges,
+    testGigControlPanelPopupSelectionSendsSongMessageForCurrentSong,
+    testGigControlPanelAdjacentSongButtonsWrapWithinGigSongs,
     testGigControlPanelRefreshesOnlyMatchingGigSongList,
     testGigControlPanelInitializesSelectedGigSongListOnMount,
     testGigControlPanelRoutesPedalHighlightsByInstrumentSlot,

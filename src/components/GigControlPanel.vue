@@ -38,13 +38,16 @@
         </div>
       </v-col>
       <v-col cols="12" md="4">
-        <div
-          v-if="currentSongList"
-          class="currentSongButton"
-          @click="openSongPicker()"
-        >
-          <div class="currentSongCaption">Current Song</div>
-          <div class="currentSongValue">{{ currentSongDisplay }}</div>
+        <div v-if="currentSongList" class="currentSongSelector">
+          <button class="currentSongNavButton" @click="selectPreviousSong()">&lt;&lt;</button>
+          <div
+            class="currentSongButton"
+            @click="openSongPicker()"
+          >
+            <div class="currentSongCaption">Current Song</div>
+            <div class="currentSongValue">{{ currentSongDisplay }}</div>
+          </div>
+          <button class="currentSongNavButton" @click="selectNextSong()">&gt;&gt;</button>
         </div>
       </v-col>
        <v-col cols="12" md="2">
@@ -493,14 +496,32 @@ export default {
     closeSongPicker () {
       this.songPickerOpen = false
     },
-    chooseSong (song) {
+    async chooseSong (song) {
       if (song && song.id !== this.currentSongId && !this.canChangeSelection('Save the current song changes before selecting another song.')) {
         return
       }
       if (song && song.id > 0) {
-        this.songId = song.id
+        await this.$store.dispatch('setCurrentSongId', song.id)
+        await this.$store.dispatch('selectSong', song.id)
       }
       this.songPickerOpen = false
+    },
+    async selectPreviousSong () {
+      await this.selectAdjacentSong(-1)
+    },
+    async selectNextSong () {
+      await this.selectAdjacentSong(1)
+    },
+    async selectAdjacentSong (direction) {
+      const songs = this.songPickerSongs
+      if (!songs || songs.length === 0) {
+        return
+      }
+
+      const currentIndex = songs.findIndex(song => song.id === this.currentSongId)
+      const startIndex = currentIndex >= 0 ? currentIndex : 0
+      const nextIndex = (startIndex + direction + songs.length) % songs.length
+      await this.chooseSong(songs[nextIndex])
     },
     canChangeSelection (message) {
       if (!this.dataChanged) {
@@ -645,10 +666,11 @@ export default {
       this.currentGig = null
       this.$store.dispatch('setSelectedGigId', -1)
     },
-    saveSong () {
-      this.$store.dispatch('updateSong', this.currentSong)
+    async saveSong () {
+      await this.$store.dispatch('updateSong', this.currentSong)
+      await this.$store.dispatch('selectSong', this.currentSongId)
       this.dataChanged = false
-      this.songReloadPending = true
+      this.songReloadPending = false
     }
   }
 }
@@ -750,9 +772,17 @@ export default {
   padding-right: 20px;
 }
 
-.currentSongButton {
+.currentSongSelector {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
   height: 48px;
   margin: 0px 20px 0px 60px;
+}
+.currentSongButton {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 48px;
   padding: 3px 14px;
   color: azure;
   text-align: left;
@@ -762,6 +792,23 @@ export default {
   border-radius: 10px;
   box-shadow: none;
   cursor: pointer;
+}
+.currentSongNavButton {
+  flex: 0 0 48px;
+  height: 48px;
+  color: #90caf9;
+  font-size: 15px;
+  font-weight: bold;
+  background-color: rgba(8, 8, 10, 0.88);
+  border: 2px solid #263238;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.currentSongNavButton:hover {
+  color: #ffffff;
+  border-color: #0b3f9f;
+  background-color: rgba(15, 38, 72, 0.88);
+  box-shadow: 4px 5px 7px -2px rgba(35, 116, 221, 0.7);
 }
 .currentSongButton:hover {
   border-color: #0b3f9f;
