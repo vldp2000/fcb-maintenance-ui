@@ -7,6 +7,11 @@ export default {
     return result.data
   },
 
+  async getGig (id) {
+    let result = await Api().get(`gig/${id}`)
+    return result.data
+  },
+
   async getId () {
     let result = await Api().get('id/gig')
     return result.data.id

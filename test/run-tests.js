@@ -209,6 +209,7 @@ function makeActionsModule (serviceOverrides = {}) {
     songsGetById: [],
     songsPut: [],
     presetsPut: [],
+    presetsDelete: [],
     instrumentBanksPut: [],
     gigsPut: [],
     scheduledGigIds: [],
@@ -282,6 +283,9 @@ function makeActionsModule (serviceOverrides = {}) {
       async put (preset) {
         serviceCalls.presetsPut.push(preset)
       },
+      async delete (presetId) {
+        serviceCalls.presetsDelete.push(presetId)
+      },
       ...serviceOverrides.PresetsService
     },
     '@/services/GigsService': {
@@ -291,6 +295,13 @@ function makeActionsModule (serviceOverrides = {}) {
           name: 'Gig',
           shortSongList: [{ id: 10, sequencenumber: 1 }]
         }]
+      },
+      async getGig (id) {
+        return {
+          id,
+          name: `Gig ${id}`,
+          shortSongList: [{ id: 10, sequencenumber: 1 }]
+        }
       },
       async getScheduledGigId () {
         return 1
@@ -386,6 +397,12 @@ function makeServiceModule (relativeFile, responseData) {
         calls.push({ method: 'PUT', url, body })
         return {
           data: body
+        }
+      },
+      async delete (url) {
+        calls.push({ method: 'DELETE', url })
+        return {
+          data: {}
         }
       }
     }
@@ -655,6 +672,28 @@ async function testUpdatePresetWaitsForApiBeforeCommit () {
   assert.deepStrictEqual(commits, [{ type: 'UPDATE_PRESET', payload: preset }])
 }
 
+async function testDeletePresetWaitsForApiBeforeCommit () {
+  const deferred = makeDeferred()
+  const { actions, serviceCalls } = makeActionsModule({
+    PresetsService: {
+      async delete (presetId) {
+        serviceCalls.presetsDelete.push(presetId)
+        await deferred.promise
+      }
+    }
+  })
+  const commits = []
+
+  const actionPromise = actions.deletePreset({ commit: (type, payload) => commits.push({ type, payload }) }, 3)
+  await flushPromises()
+  assert.deepStrictEqual(commits, [])
+
+  deferred.resolve()
+  await actionPromise
+  assert.deepStrictEqual(serviceCalls.presetsDelete, [3])
+  assert.deepStrictEqual(commits, [{ type: 'DELETE_PRESET', payload: 3 }])
+}
+
 async function testUpdateInstrumentBankWaitsForApiBeforeCommit () {
   const deferred = makeDeferred()
   const instrumentBank = {
@@ -769,13 +808,13 @@ async function testSaveGigSongsEmitsGigChangedNotification () {
   })
 
   assert.deepStrictEqual(serviceCalls.emitted, [
-    { eventName: 'VIEW_GIG_CHANGED_MESSAGE', payload: { gigId: 7 } }
+    { eventName: 'VIEW_GIG_CHANGED_MESSAGE', payload: { gigId: 7, action: 'changed' } }
   ])
 }
 
 async function testSetGigAsScheduledWaitsForApiBeforeCommit () {
   const deferred = makeDeferred()
-  const { actions } = makeActionsModule({
+  const { actions, serviceCalls } = makeActionsModule({
     GigsService: {
       async saveScheduledGigId () {
         await deferred.promise
@@ -791,6 +830,21 @@ async function testSetGigAsScheduledWaitsForApiBeforeCommit () {
   deferred.resolve()
   await actionPromise
   assert.deepStrictEqual(commits, [{ type: 'SET_SCHEDULEDGIG_ID', payload: 7 }])
+  assert.deepStrictEqual(serviceCalls.emitted, [
+    { eventName: 'VIEW_GIG_CHANGED_MESSAGE', payload: { gigId: 7, action: 'default' } }
+  ])
+}
+
+async function testSetSelectedGigIdEmitsLiveGigSelection () {
+  const { actions, serviceCalls } = makeActionsModule()
+  const commits = []
+
+  await actions.setSelectedGigId({ commit: (type, payload) => commits.push({ type, payload }) }, 7)
+
+  assert.deepStrictEqual(commits, [{ type: 'SET_SELECTEDGIG_ID', payload: 7 }])
+  assert.deepStrictEqual(serviceCalls.emitted, [
+    { eventName: 'VIEW_GIG_CHANGED_MESSAGE', payload: { gigId: 7, action: 'select' } }
+  ])
 }
 
 async function testAddSongItemsLoadsSongPrograms () {
@@ -957,6 +1011,12 @@ function testMutationsUpdateState () {
   mutations.ADD_PRESET(state, { id: 4 })
   mutations.UPDATE_PRESET(state, { id: 4, name: 'Updated Preset' })
   assert.deepStrictEqual(state.presetList, [{ id: 4, name: 'Updated Preset' }])
+  mutations.UPDATE_PRESET(state, { id: 44, name: 'Added By Update' })
+  assert.deepStrictEqual(state.presetList, [{ id: 4, name: 'Updated Preset' }, { id: 44, name: 'Added By Update' }])
+  mutations.DELETE_PRESET(state, 4)
+  assert.deepStrictEqual(state.presetList, [{ id: 44, name: 'Added By Update' }])
+  mutations.DELETE_PRESET(state, 999)
+  assert.deepStrictEqual(state.presetList, [{ id: 44, name: 'Added By Update' }])
 
   mutations.SET_INSTRUMENTBANKLIST(state, [])
   mutations.ADD_INSTRUMENTBANK(state, { id: 5 })
@@ -1086,6 +1146,7 @@ async function testInstrumentServicesMapApiRequests () {
   assert.deepStrictEqual(await presets.service.getAllData(), { id: 8 })
   assert.strictEqual(await presets.service.getId(), 8)
   await presets.service.put({ id: 8, name: 'Preset' })
+  await presets.service.delete(8)
 
   assert.deepStrictEqual(await presetUsage.service.getUsage(1, 24), { usageCount: 1 })
 
@@ -1102,7 +1163,8 @@ async function testInstrumentServicesMapApiRequests () {
   assert.deepStrictEqual(presets.calls, [
     { method: 'GET', url: 'all/preset' },
     { method: 'GET', url: 'id/preset' },
-    { method: 'PUT', url: 'preset/8', body: { id: 8, name: 'Preset' } }
+    { method: 'PUT', url: 'preset/8', body: { id: 8, name: 'Preset' } },
+    { method: 'DELETE', url: 'preset/8' }
   ])
   assert.deepStrictEqual(presetUsage.calls, [
     { method: 'GET', url: 'presetusage/1/24' }
@@ -1618,7 +1680,19 @@ function testGigSongPanelRendersSongAssignmentControls () {
 }
 
 async function testPresetsPanelBusinessMethods () {
-  const component = loadVueComponent('components/PresetsPanel.vue', {}, {})
+  const usageCalls = []
+  let usageResponse = { usageCount: 0, usages: [] }
+  const component = loadVueComponent('components/PresetsPanel.vue', {
+    '@/services/PresetUsageService': {
+      __esModule: true,
+      default: {
+        async getUsage (instrumentId, midiPc) {
+          usageCalls.push({ instrumentId, midiPc })
+          return usageResponse
+        }
+      }
+    }
+  }, {})
   const presetA = {
     id: 1,
     name: 'Clean',
@@ -1659,19 +1733,53 @@ async function testPresetsPanelBusinessMethods () {
   assert.deepStrictEqual(context.editedItem, presetA)
 
   context.editedIndex = 0
-  context.savePreset()
+  await context.savePreset()
   assert.deepStrictEqual(context.dispatches.at(-1), {
     type: 'updatePreset',
     payload: context.editedItem
   })
 
   context.editedIndex = -1
-  context.editedItem = { name: 'New Preset' }
-  context.savePreset()
+  context.editedItem = { id: -1, name: 'New Preset', midipc: '80', refinstrument: 1, refinstrumentbank: 10 }
+  await context.savePreset()
   assert.deepStrictEqual(context.dispatches.at(-1), {
     type: 'addPreset',
     payload: context.editedItem
   })
+  assert.strictEqual(context.editedItem.midipc, 80)
+
+  context.editedItem = { id: -1, name: '', midipc: 24, refinstrument: 1, refinstrumentbank: 10 }
+  await context.savePreset()
+  assert.strictEqual(context.errorMessage, 'Preset name is required.')
+
+  context.editedItem = { id: -1, name: 'Bad PC', midipc: 128, refinstrument: 1, refinstrumentbank: 10 }
+  await context.savePreset()
+  assert.strictEqual(context.errorMessage, 'Midi PC must be a number between 0 and 127.')
+
+  context.editedItem = { id: -1, name: 'Duplicate', midipc: 24, refinstrument: 1, refinstrumentbank: 10 }
+  await context.savePreset()
+  assert.strictEqual(context.errorMessage, 'Instrument and Midi PC are already used by "Clean".')
+
+  const originalConfirm = global.confirm
+  global.confirm = () => true
+  try {
+    await context.deleteItem(presetA)
+    assert.deepStrictEqual(usageCalls.at(-1), { instrumentId: 1, midiPc: 24 })
+    assert.deepStrictEqual(context.dispatches.at(-1), {
+      type: 'deletePreset',
+      payload: 1
+    })
+
+    usageResponse = { usageCount: 2, usages: [{}, {}] }
+    await context.deleteItem(presetB)
+    assert.strictEqual(context.errorMessage, 'Preset is used in 2 song programs and cannot be deleted.')
+    assert.notDeepStrictEqual(context.dispatches.at(-1), {
+      type: 'deletePreset',
+      payload: 2
+    })
+  } finally {
+    global.confirm = originalConfirm
+  }
 }
 
 async function testPresetControlBusinessMethods () {
@@ -1857,7 +1965,7 @@ async function testGigControlPanelBusinessMethods () {
   assert.strictEqual(context.songReloadPending, false)
 
   await context.setGigSong()
-  assert.deepStrictEqual(context.dispatches.at(-1), { type: 'setSelectedGigId', payload: 1 })
+  assert.deepStrictEqual(context.dispatches.at(-1), { type: 'setSelectedGigId', payload: 2 })
 
   context.clearGig()
   assert.strictEqual(context.currentGig, null)
@@ -2248,11 +2356,13 @@ async function run () {
     testUpdateSongPersistsBeforeCommit,
     testUpdateInstrumentPersistsPayload,
     testUpdatePresetWaitsForApiBeforeCommit,
+    testDeletePresetWaitsForApiBeforeCommit,
     testUpdateInstrumentBankWaitsForApiBeforeCommit,
     testUpdateGigWaitsForApiBeforeCommit,
     testSaveGigSongsWaitsForApiBeforeCommit,
     testSaveGigSongsEmitsGigChangedNotification,
     testSetGigAsScheduledWaitsForApiBeforeCommit,
+    testSetSelectedGigIdEmitsLiveGigSelection,
     testAddSongItemsLoadsSongPrograms,
     testSocketActionsEmitAndSubscribe,
     testInstrumentImagesInitializedHandlesEmptyList,

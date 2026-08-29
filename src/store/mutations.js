@@ -108,7 +108,17 @@ const mutations = {
   },
   [types.UPDATE_PRESET] (state, preset) {
     const item = state.presetList.find(item => item.id === preset.id)
-    Object.assign(item, preset)
+    if (item) {
+      Object.assign(item, preset)
+    } else {
+      state.presetList.push(preset)
+    }
+  },
+  [types.DELETE_PRESET] (state, presetId) {
+    const index = state.presetList.findIndex(item => item.id === presetId)
+    if (index > -1) {
+      state.presetList.splice(index, 1)
+    }
   },
 
   [types.SET_INSTRUMENTBANKLIST] (state, instrumentBankList) {

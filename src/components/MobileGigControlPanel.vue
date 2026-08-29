@@ -380,10 +380,7 @@ export default {
 
     async setGigSong () {
       let gId = -1
-      const currentGig = this.gigList.find(g => g.currentFlag === 1)
-      if (currentGig) {
-        gId = currentGig.id
-      } else if (this.scheduledGigId > 0) {
+      if (this.scheduledGigId > 0) {
         gId = this.scheduledGigId
       }
       if (gId > 0) {

@@ -252,6 +252,10 @@ const actions = {
     await PresetsService.put(preset)
     commit(types.UPDATE_PRESET, preset)
   },
+  async deletePreset ({ commit }, presetId) {
+    await PresetsService.delete(presetId)
+    commit(types.DELETE_PRESET, presetId)
+  },
 
   //  Instrument Bank List -----------------------------------------------------
   setInstrumentBankList ({ commit }, payload) {
@@ -323,7 +327,7 @@ const actions = {
       }
       commit(types.UPDATE_GIG, gig)
       commit(types.REFRESH_GIG_SONGS, gig.id)
-      socketClient.emit(config.viewGigChangedMessage, { gigId: gig.id })
+      socketClient.emit(config.viewGigChangedMessage, { gigId: gig.id, action: 'changed' })
     } catch (ex) {
       Vue.$log.error(ex)
     }
@@ -335,12 +339,16 @@ const actions = {
   //  Set current Gig Id-----------------------------------------------------
   setSelectedGigId ({ commit }, id) {
     commit(types.SET_SELECTEDGIG_ID, id)
+    if (id > 0) {
+      socketClient.emit(config.viewGigChangedMessage, { gigId: id, action: 'select' })
+    }
   },
 
   //  setGigAsScheduled -----------------------------------------------------
   async setGigAsScheduled ({ commit }, id) {
     await GigsService.saveScheduledGigId(id)
     commit(types.SET_SCHEDULEDGIG_ID, id)
+    socketClient.emit(config.viewGigChangedMessage, { gigId: id, action: 'default' })
   },
 
   //  Set current Song Id-----------------------------------------------------
@@ -384,6 +392,26 @@ const actions = {
     this._vm.$socket.client.on(config.controllerGigMessage, (data) => {
       const id = parseInt(data)
       commit(types.SET_SELECTEDGIG_ID, id)
+    })
+
+    this._vm.$socket.client.on(config.viewGigChangedMessage, async (payload) => {
+      const id = parseInt(payload && payload.gigId)
+      if (!id) return
+
+      try {
+        const gig = await GigsService.getGig(id)
+        commit(types.UPDATE_GIG, gig)
+      } catch (ex) {
+        Vue.$log.error(ex)
+      }
+
+      if (payload && payload.action === 'default') {
+        commit(types.SET_SCHEDULEDGIG_ID, id)
+      }
+      if (payload && payload.action === 'select') {
+        commit(types.SET_SELECTEDGIG_ID, id)
+      }
+      commit(types.REFRESH_GIG_SONGS, id)
     })
 
     this._vm.$socket.client.on(config.controllerPedal1Message, (data) => {

@@ -11,5 +11,8 @@ export default {
   },
   async put (preset) {
     await Api().put(`preset/${preset.id}`, preset)
+  },
+  async delete (presetId) {
+    await Api().delete(`preset/${presetId}`)
   }
 }

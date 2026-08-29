@@ -17,6 +17,11 @@
               </div>
             </v-col>
           </v-row>
+          <v-row v-if="errorMessage">
+            <v-col cols="12">
+              <v-alert type="warning" dense text dismissible @input="errorMessage = ''">{{ errorMessage }}</v-alert>
+            </v-col>
+          </v-row>
 
           <v-row>
             <v-col>
@@ -69,6 +74,11 @@
 
                       <v-card-text>
                         <v-container>
+                          <v-row v-if="errorMessage">
+                            <v-col cols="12">
+                              <v-alert type="error" dense text>{{ errorMessage }}</v-alert>
+                            </v-col>
+                          </v-row>
                           <v-row>
                             <v-col cols="12" sm="6" md="4">
                               <v-text-field v-model="editedItem.name" label="Name"></v-text-field>
@@ -107,8 +117,8 @@
 
                       <v-card-actions>
                         <v-spacer></v-spacer>
-                        <v-btn color="cyan darken-1" text @click="closeDialog">Cancel</v-btn>
-                        <v-btn color="cyan darken-1" text @click="savePreset">Save</v-btn>
+                        <v-btn color="cyan darken-1" text :disabled="savingPreset" @click="closeDialog">Cancel</v-btn>
+                        <v-btn color="cyan darken-1" text :loading="savingPreset" @click="savePreset">Save</v-btn>
                       </v-card-actions>
                     </v-card>
                   </v-dialog>
@@ -122,6 +132,13 @@
                     @click="editItem(item)"
                   >
                     edit
+                  </v-icon>
+                  <v-icon
+                    big
+                    class="mr-2"
+                    @click="deleteItem(item)"
+                  >
+                    delete
                   </v-icon>
                 </div>
               </template>
@@ -137,6 +154,7 @@
 
 <script>
 import { mapState } from 'vuex'
+import PresetUsageService from '@/services/PresetUsageService'
 
 export default {
   data () {
@@ -178,7 +196,10 @@ export default {
       selected: [],
       instrumentId: -1,
       bankList: [],
-      bankId: -1
+      bankId: -1,
+      savingPreset: false,
+      deletingPreset: false,
+      errorMessage: ''
     }
   },
 
@@ -228,13 +249,30 @@ export default {
       this.editedIndex = this.presetList.indexOf(item)
       this.editedItem = Object.assign({}, item)
       this.dialog = true
+      this.errorMessage = ''
       this.instrumentId = item.refinstrument
       // this.$log.debug(`-------finish editItem (item)  ${item.id}`)
     },
 
-    deleteItem (item) {
-      const index = this.presets.indexOf(item)
-      confirm('Are you sure you want to delete this item?') && this.presets.splice(index, 1)
+    async deleteItem (item) {
+      this.errorMessage = ''
+      if (!item || item.id < 0 || this.deletingPreset) return
+      if (!confirm('Are you sure you want to delete this preset?')) return
+
+      this.deletingPreset = true
+      try {
+        const usage = await PresetUsageService.getUsage(item.refinstrument, item.midipc)
+        if (usage && usage.usageCount > 0) {
+          this.errorMessage = `Preset is used in ${usage.usageCount} song program${usage.usageCount === 1 ? '' : 's'} and cannot be deleted.`
+          return
+        }
+        await this.$store.dispatch('deletePreset', item.id)
+      } catch (err) {
+        this.errorMessage = `Could not delete preset: ${err.message || err}`
+        this.$log.debug(err)
+      } finally {
+        this.deletingPreset = false
+      }
     },
 
     closeDialog () {
@@ -245,26 +283,54 @@ export default {
         this.instrumentId = -1
         this.bankList = []
         this.bankId = -1
+        this.errorMessage = ''
       }, 300)
     },
 
-    savePreset () {
+    validatePreset () {
+      const midiPc = Number(this.editedItem.midipc)
+      if (!this.editedItem.name || !this.editedItem.name.trim()) {
+        return 'Preset name is required.'
+      }
+      if (!Number.isInteger(midiPc) || midiPc < 0 || midiPc > 127) {
+        return 'Midi PC must be a number between 0 and 127.'
+      }
+      if (!this.editedItem.refinstrument || this.editedItem.refinstrument < 1) {
+        return 'Instrument is required.'
+      }
+      if (!this.editedItem.refinstrumentbank || this.editedItem.refinstrumentbank < 1) {
+        return 'Bank is required.'
+      }
+      const duplicate = this.presetList.find(item => item.id !== this.editedItem.id &&
+        parseInt(item.refinstrument, 10) === parseInt(this.editedItem.refinstrument, 10) &&
+        parseInt(item.midipc, 10) === midiPc)
+      if (duplicate) {
+        return `Instrument and Midi PC are already used by "${duplicate.name}".`
+      }
+      this.editedItem.midipc = midiPc
+      return ''
+    },
+
+    async savePreset () {
       // this.$log.debug('savePreset () -------')
       // this.$log.debug(this.editedItem)
-      if (this.editedIndex > -1) {
-        try {
-          this.$store.dispatch('updatePreset', this.editedItem)
-        } catch (err) {
-          this.$log.debug(err)
+      this.errorMessage = this.validatePreset()
+      if (this.errorMessage) return
+
+      this.savingPreset = true
+      try {
+        if (this.editedIndex > -1) {
+          await this.$store.dispatch('updatePreset', this.editedItem)
+        } else {
+          await this.$store.dispatch('addPreset', this.editedItem)
         }
-      } else {
-        try {
-          this.$store.dispatch('addPreset', this.editedItem)
-        } catch (err) {
-          this.$log.debug(err)
-        }
+        this.closeDialog()
+      } catch (err) {
+        this.errorMessage = `Could not save preset: ${err.message || err}`
+        this.$log.debug(err)
+      } finally {
+        this.savingPreset = false
       }
-      this.closeDialog()
     },
     getBankList (id) {
       // this.$log.debug(' -----getBankList======== ')
