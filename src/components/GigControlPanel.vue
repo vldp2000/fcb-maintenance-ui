@@ -37,7 +37,7 @@
            </metronome>
         </div>
       </v-col>
-      <v-col cols="12" md="4">
+      <v-col cols="12" md="5">
         <div v-if="currentSongList" class="currentSongSelector">
           <button class="currentSongNavButton" @click="selectPreviousSong()">&lt;&lt;</button>
           <div
@@ -50,7 +50,7 @@
           <button class="currentSongNavButton" @click="selectNextSong()">&gt;&gt;</button>
         </div>
       </v-col>
-       <v-col cols="12" md="2">
+       <v-col cols="12" md="1">
         <div class="songActionPanel">
           <v-icon medium
             v-bind:class="(dataChanged) ? 'songActionButtonActive saveSongButtonHighighted' : 'songActionButtonInactive saveSongButton'"
@@ -775,9 +775,9 @@ export default {
 .currentSongSelector {
   display: flex;
   align-items: stretch;
-  gap: 8px;
+  gap: 6px;
   height: 48px;
-  margin: 0px 20px 0px 60px;
+  margin: 0px 6px 0px 0px;
 }
 .currentSongButton {
   flex: 1 1 auto;
@@ -794,7 +794,7 @@ export default {
   cursor: pointer;
 }
 .currentSongNavButton {
-  flex: 0 0 48px;
+  flex: 0 0 42px;
   height: 48px;
   color: #90caf9;
   font-size: 15px;
@@ -945,19 +945,20 @@ export default {
   flex-wrap: nowrap;
   align-items: flex-start;
   justify-content: flex-start;
-  min-width: 112px;
+  gap: 6px;
+  min-width: 94px;
 }
 .songActionButtonInactive,
 .songActionButtonActive {
-  width: 48px;
+  width: 44px;
   height: 48px;
-  margin-left: 8px;
+  margin-left: 0px;
   margin-top: 1px;
   border-radius: 10px;
   border: 2px solid #263238;
   background-color: rgba(8, 8, 10, 0.88);
   font-size: 26px !important;
-  flex: 0 0 48px;
+  flex: 0 0 44px;
 }
 .songActionButtonInactive {
   color: #455a64;
@@ -982,19 +983,19 @@ export default {
   color: #455a64;
 }
 .defaultGigHighighted {
-  margin-left: -10px;
+  margin-left: -4px;
   margin-top: 5px;
   color: #ffca28;
   font-size: 36px;
 }
 .defaultGig {
-  margin-left: -10px;
+  margin-left: -4px;
   margin-top: 5px;
   color: #b0bec5;
   font-size: 36px;
 }
 .clearGigBbutton {
-  margin-left: 10px;
+  margin-left: 4px;
   margin-top: 5px;
   color: #b0bec5;
   font-size: 36px;
