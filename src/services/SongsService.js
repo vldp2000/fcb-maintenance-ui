@@ -1,17 +1,16 @@
 import Api from '@/services/Api'
-import Vue from 'vue'
 
 export default {
   async getAllData () {
-    let result = await Api().get('all/song')
+    const result = await Api().get('all/song')
     return result.data
   },
   async getId () {
-    let result = await Api().get('id/song')
+    const result = await Api().get('id/song')
     return result.data.id
   },
   async getSongItems (songId) {
-    let result = await Api().get(`song/${songId}`)
+    const result = await Api().get(`song/${songId}`)
     return {
       songId,
       programs: result.data.programList || []
@@ -19,15 +18,10 @@ export default {
   },
 
   async putSong (song) {
-    try {
-      let songObj = Object.assign({}, song)
-      delete songObj.ordernumber
-      delete songObj.createdAt
-      delete songObj.updatedAt
-      let result = await Api().put(`song/${songObj.id}`, songObj)
-      return result
-    } catch (ex) {
-      Vue.$log.error(ex)
-    }
+    const songObj = Object.assign({}, song)
+    delete songObj.ordernumber
+    delete songObj.createdAt
+    delete songObj.updatedAt
+    return Api().put(`song/${songObj.id}`, songObj)
   }
 }

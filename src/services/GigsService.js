@@ -1,46 +1,33 @@
 import Api from '@/services/Api'
-import Vue from 'vue'
 
 export default {
   async getAllData () {
-    let result = await Api().get('all/gig')
+    const result = await Api().get('all/gig')
     return result.data
   },
 
   async getGig (id) {
-    let result = await Api().get(`gig/${id}`)
+    const result = await Api().get(`gig/${id}`)
     return result.data
   },
 
   async getId () {
-    let result = await Api().get('id/gig')
+    const result = await Api().get('id/gig')
     return result.data.id
   },
 
   async putGig (gig) {
-    try {
-      let gigObj = Object.assign({}, gig)
-      delete gigObj.songList
-      await Api().put(`gig/${gig.id}`, gigObj)
-    } catch (ex) {
-      Vue.$log.error(ex)
-    }
+    const gigObj = Object.assign({}, gig)
+    delete gigObj.songList
+    return Api().put(`gig/${gig.id}`, gigObj)
   },
 
   async saveScheduledGigId (id) {
-    try {
-      const gigIdObj = { 'id': id }
-      await Api().put('currentgig', gigIdObj)
-    } catch (ex) {
-      Vue.$log.error(ex)
-    }
+    const gigIdObj = { id }
+    return Api().put('currentgig', gigIdObj)
   },
   async getScheduledGigId (id) {
-    try {
-      let result = await Api().get('currentgig')
-      return result.data.id
-    } catch (ex) {
-      Vue.$log.error(ex)
-    }
+    const result = await Api().get('currentgig')
+    return result.data.id
   }
 }

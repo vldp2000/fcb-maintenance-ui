@@ -1,6 +1,7 @@
 <template>
   <v-container grid-list-md text-md-center fluid class="darkBackgroud">
   <div class="selector-panel">
+    <v-alert v-if="saveError" type="error" dense>{{ saveError }}</v-alert>
     <v-row md12 no-gutters>
       <v-col cols="12" md="4">
         <v-select
@@ -311,6 +312,7 @@ export default {
       currentSongList: [],
       initFlag: true,
       dataChanged: false,
+      saveError: '',
       songReloadPending: false,
       songPickerOpen: false,
       unsavedChangesDialog: false,
@@ -388,7 +390,7 @@ export default {
     refreshSong: async function () {
       if (this.currentSongId > 0) {
         if (typeof this.songList !== 'undefined') {
-          this.currentSong = await this.songList.find(song => song.id === this.currentSongId)
+          this.currentSong = this.songList.find(song => song.id === this.currentSongId)
           this.songId = this.currentSong.id
         }
       }
@@ -446,11 +448,11 @@ export default {
     async setCurrentSong () {
       const id = this.currentSongId
       if (this.currentSongList) {
-        this.currentSong = await this.currentSongList.find(item => item.id === id)
+        this.currentSong = this.currentSongList.find(item => item.id === id)
       }
       if (!this.currentSong && this.selectedGigId > 0) {
         if (this.currentGig && this.currentGig.songList && this.currentGig.songList.length > 0) {
-          this.currentSong = await this.currentGig.songList.find(item => item.id === id)
+          this.currentSong = this.currentGig.songList.find(item => item.id === id)
         }
       }
 
@@ -466,7 +468,7 @@ export default {
       try {
         this.gigId = -1
         this.currentGig = null
-        this.currentSong = await this.songList.find(item => item.id === this.currentSongId)
+        this.currentSong = this.songList.find(item => item.id === this.currentSongId)
       } catch (ex) {
         this.$log.error(ex)
       }
@@ -541,8 +543,8 @@ export default {
       }
 
       const songs = []
-      for (let item of gig.shortSongList) {
-        const song = await this.songList.find(song => song.id === item.id)
+      for (const item of gig.shortSongList) {
+        const song = this.songList.find(song => song.id === item.id)
         if (song) {
           songs.push(song)
         }
@@ -556,11 +558,11 @@ export default {
         return
       }
 
-      this.currentGig = await this.gigList.find(gig => gig.id === id)
+      this.currentGig = this.gigList.find(gig => gig.id === id)
       if (!this.currentGig) return
 
       const songs = await this.getGigSongs(this.currentGig)
-      await this.$store.dispatch('populateGigSongs', { 'gigId': id, 'songs': songs })
+      await this.$store.dispatch('populateGigSongs', { gigId: id, songs })
       this.currentSongList = songs
       this.currentSong = songs.length > 0 ? songs[0] : null
       if (songs.length > 0) {
@@ -613,7 +615,7 @@ export default {
           typeof (this.currentSong.programList) === 'undefined') {
             return this.defaultPreset
           }
-          let preset = {}
+          const preset = {}
           Object.assign(preset, this.currentSong.programList[programIndex].presetList[presetIndex])
           return preset
         }
@@ -667,10 +669,17 @@ export default {
       this.$store.dispatch('setSelectedGigId', -1)
     },
     async saveSong () {
-      await this.$store.dispatch('updateSong', this.currentSong)
-      await this.$store.dispatch('selectSong', this.currentSongId)
-      this.dataChanged = false
-      this.songReloadPending = false
+      this.saveError = ''
+      try {
+        await this.$store.dispatch('updateSong', this.currentSong)
+        await this.$store.dispatch('selectSong', this.currentSongId)
+        this.dataChanged = false
+        this.songReloadPending = false
+      } catch (ex) {
+        this.$log.error(ex)
+        this.saveError = 'Save failed. Your unsaved changes have been kept.'
+        this.dataChanged = true
+      }
     }
   }
 }

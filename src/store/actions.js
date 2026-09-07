@@ -13,11 +13,11 @@ let clientInitialized = false
 // let clientSubscribed = false
 
 async function setInstrumentIcons (commit) {
-  let result = await InstrumentsService.getInstrumentIcons(require.context('../assets/', false, /\.png$/))
-  await commit(types.SET_INSTRUMENT_IMAGE, result)
+  const result = await InstrumentsService.getInstrumentIcons(require.context('../assets/', false, /\.png$/))
+  commit(types.SET_INSTRUMENT_IMAGE, result)
 }
 
-export async function validateSong (song) {
+export function validateSong (song) {
   const pList = ['A', 'B', 'C', 'D']
   let i = 0
 
@@ -25,15 +25,15 @@ export async function validateSong (song) {
     return false
   }
 
-  for (let p of pList) {
+  for (const p of pList) {
     const program = song.programList[i]
     if (program.name !== p || program.refsong !== song.id || program.midipedal !== i + 1 || !program.presetList || program.presetList.length !== 4) {
       return false
     }
-    let instList = []
-    let instBankList = []
-    let presetList = []
-    for (let preset of program.presetList) {
+    const instList = []
+    const instBankList = []
+    const presetList = []
+    for (const preset of program.presetList) {
       if (preset.refsong !== song.id || preset.refsongprogram !== program.id) {
         return false
       }
@@ -57,33 +57,33 @@ export async function addNewSong (getters, song) {
   const pList = ['A', 'B', 'C', 'D']
   let i = 1
   let j = 1
-  for (let p of pList) {
-    let pr = {
-      'id': i,
-      'name': p,
-      'midipedal': i,
-      'refsong': song.id,
-      'tytle': p,
-      'presetList': []
+  for (const p of pList) {
+    const pr = {
+      id: i,
+      name: p,
+      midipedal: i,
+      refsong: song.id,
+      tytle: p,
+      presetList: []
     }
 
-    for (let instrument of getters.instrumentList) {
-      let preset = {
-        'id': j,
-        'refsong': song.id,
-        'refsongprogram': pr.id,
-        'refinstrument': instrument.id,
-        'refinstrumentbank': instrument.id, // todo
-        'refpreset': instrument.id, // todo
-        'volume': 0,
-        'pan': 64,
-        'muteflag': 0,
-        'boostflag': 0,
-        'reverbflag': 0,
-        'delayflag': 0,
-        'modeflag': 0,
-        'reverbvalue': 0,
-        'delayvalue': 0
+    for (const instrument of getters.instrumentList) {
+      const preset = {
+        id: j,
+        refsong: song.id,
+        refsongprogram: pr.id,
+        refinstrument: instrument.id,
+        refinstrumentbank: instrument.id, // todo
+        refpreset: instrument.id, // todo
+        volume: 0,
+        pan: 64,
+        muteflag: 0,
+        boostflag: 0,
+        reverbflag: 0,
+        delayflag: 0,
+        modeflag: 0,
+        reverbvalue: 0,
+        delayvalue: 0
       }
       pr.presetList.push(preset)
       j = j + 1
@@ -97,11 +97,11 @@ export async function addNewSong (getters, song) {
 
 export async function updateGigSongCollection (getters, gig) {
   if (gig && gig.shortSongList && gig.shortSongList.length > 0) {
-    let songs = []
-    for (let item of gig.shortSongList) {
-      let song = await getters.songList.find(s => s.id === item.id)
+    const songs = []
+    for (const item of gig.shortSongList) {
+      const song = getters.songList.find(s => s.id === item.id)
       if (song) {
-        await songs.push(song)
+        songs.push(song)
       }
     }
     return songs
@@ -110,80 +110,83 @@ export async function updateGigSongCollection (getters, gig) {
   }
 }
 export async function initializeAllLists (commit, getters) {
-  await commit(types.INIT_INPROGRESS, true)
+  commit(types.INIT_INPROGRESS, true)
 
-  if (!getters.songList || getters.songList.length === 0) {
-    let songs = await SongsService.getAllData()
-    if (songs.length > 0) {
-      for (let song of songs) {
-        if (!validateSong(song)) {
-          Vue.$log.error(`Error. Song Invalid ${song.id}`)
+  try {
+    if (!getters.songList || getters.songList.length === 0) {
+      const songs = await SongsService.getAllData()
+      if (songs.length > 0) {
+        for (const song of songs) {
+          if (!validateSong(song)) {
+            Vue.$log.error(`Error. Song Invalid ${song.id}`)
+          }
         }
+        commit(types.SET_SONGLIST, songs)
       }
-      await commit(types.SET_SONGLIST, songs)
     }
-  }
 
-  if (!getters.instrumentList || getters.instrumentList.length === 0) {
-    let instruments = await InstrumentsService.getAllData()
-    if (instruments.length > 0) {
-      await commit(types.SET_INSTRUMENTLIST, instruments)
-    }
-  }
-
-  if (!getters.instrumentBankList || getters.instrumentBankList.length === 0) {
-    let instrumentBanks = await InstrumentBankService.getAllData()
-    if (instrumentBanks.length > 0) {
-      await commit(types.SET_INSTRUMENTBANKLIST, instrumentBanks)
-    }
-  }
-
-  if (!getters.presetList || getters.presetList.length === 0) {
-    let presets = await PresetsService.getAllData()
-    if (presets.length > 0) {
-      let sortedList = await _sortBy(presets, 'name')
-      await commit(types.SET_PRESETLIST, sortedList)
-    }
-  }
-
-  if (!getters.gigList || getters.gigList.length === 0) {
-    let gigs = await GigsService.getAllData()
-    if (gigs.length > 0) {
-      for (let gig of gigs) {
-        if (!gig.shortSongList) {
-          Vue.set(gig, 'shortSongList', [])
-        } else {
-          let sortedList = await _sortBy(gig.shortSongList, 'sequencenumber')
-          Vue.set(gig, 'shortSongList', sortedList)
-        }
-        if (!gig.songList) {
-          Vue.set(gig, 'songList', [])
-        }
+    if (!getters.instrumentList || getters.instrumentList.length === 0) {
+      const instruments = await InstrumentsService.getAllData()
+      if (instruments.length > 0) {
+        commit(types.SET_INSTRUMENTLIST, instruments)
       }
-      await commit(types.SET_GIGLIST, gigs)
     }
-  }
 
-  for (let gig of getters.gigList) {
-    if (gig.shortSongList && gig.shortSongList.length > 0) {
-      const songs = await updateGigSongCollection(getters, gig)
-      const payload = { 'gigId': gig.id, 'songs': songs }
-      await commit(types.POPULATE_GIG_SONGS, payload)
+    if (!getters.instrumentBankList || getters.instrumentBankList.length === 0) {
+      const instrumentBanks = await InstrumentBankService.getAllData()
+      if (instrumentBanks.length > 0) {
+        commit(types.SET_INSTRUMENTBANKLIST, instrumentBanks)
+      }
     }
-  }
 
-  const gigId = await GigsService.getScheduledGigId()
-  await commit(types.SET_SCHEDULEDGIG_ID, gigId)
-  await setInstrumentIcons(commit)
-  commit(types.INIT_ALL)
-  commit(types.INIT_INPROGRESS, false)
+    if (!getters.presetList || getters.presetList.length === 0) {
+      const presets = await PresetsService.getAllData()
+      if (presets.length > 0) {
+        const sortedList = _sortBy(presets, 'name')
+        commit(types.SET_PRESETLIST, sortedList)
+      }
+    }
+
+    if (!getters.gigList || getters.gigList.length === 0) {
+      const gigs = await GigsService.getAllData()
+      if (gigs.length > 0) {
+        for (const gig of gigs) {
+          if (!gig.shortSongList) {
+            Vue.set(gig, 'shortSongList', [])
+          } else {
+            const sortedList = _sortBy(gig.shortSongList, 'sequencenumber')
+            Vue.set(gig, 'shortSongList', sortedList)
+          }
+          if (!gig.songList) {
+            Vue.set(gig, 'songList', [])
+          }
+        }
+        commit(types.SET_GIGLIST, gigs)
+      }
+    }
+
+    for (const gig of getters.gigList) {
+      if (gig.shortSongList && gig.shortSongList.length > 0) {
+        const songs = await updateGigSongCollection(getters, gig)
+        const payload = { gigId: gig.id, songs }
+        commit(types.POPULATE_GIG_SONGS, payload)
+      }
+    }
+
+    const gigId = await GigsService.getScheduledGigId()
+    commit(types.SET_SCHEDULEDGIG_ID, gigId)
+    await setInstrumentIcons(commit)
+    commit(types.INIT_ALL)
+  } finally {
+    commit(types.INIT_INPROGRESS, false)
+  }
 }
 
 // ----------A C T I O N S--------------------
 
 const actions = {
   initAllLists ({ commit, getters }, payload) {
-    initializeAllLists(commit, getters)
+    return initializeAllLists(commit, getters)
   },
   //  Song List -----------------------------------------------------
   setSongList ({ commit }, payload) {
@@ -204,11 +207,12 @@ const actions = {
   },
   async addSongItems ({ commit }, songId) {
     try {
-      let songPrograms = await SongsService.getSongItems(songId)
-      await commit(types.ADD_SONG_ITEMS, songPrograms)
-      await commit(types.REFRESH_SONG, songId)
+      const songPrograms = await SongsService.getSongItems(songId)
+      commit(types.ADD_SONG_ITEMS, songPrograms)
+      commit(types.REFRESH_SONG, songId)
     } catch (ex) {
       Vue.$log.error(ex)
+      throw ex
     }
   },
   updateSongProgram ({ commit }, songProgram) {
@@ -246,7 +250,7 @@ const actions = {
     const id = await PresetsService.getId()
     preset.id = id
     await PresetsService.put(preset)
-    await commit(types.ADD_PRESET, preset)
+    commit(types.ADD_PRESET, preset)
   },
   async updatePreset ({ commit }, preset) {
     await PresetsService.put(preset)
@@ -306,22 +310,22 @@ const actions = {
 
   async saveGigSongs ({ commit, getters }, payload) { // {}  gigId, songList)
     try {
-      var gig = Object.assign({}, payload.gig)
+      const gig = Object.assign({}, payload.gig)
       if (!gig.shortSongList) {
         Vue.set(gig, 'shortSongList', [])
       } else {
         gig.shortSongList = []
       }
       let i = 1
-      for (let item of payload.songList) {
-        const song = { 'id': item.id, 'sequencenumber': i }
+      for (const item of payload.songList) {
+        const song = { id: item.id, sequencenumber: i }
         gig.shortSongList.push(song)
         i = i + 1
       }
       await GigsService.putGig(gig)
 
       gig.songList = []
-      for (let item of payload.songList) {
+      for (const item of payload.songList) {
         const song = getters.songList.find(s => s.id === item.id)
         gig.songList.push(song)
       }
@@ -330,6 +334,7 @@ const actions = {
       socketClient.emit(config.viewGigChangedMessage, { gigId: gig.id, action: 'changed' })
     } catch (ex) {
       Vue.$log.error(ex)
+      throw ex
     }
   },
   async resetGigSongs ({ dispatch }, payload) {

@@ -490,6 +490,32 @@ async function testInitializeAllListsMarksInitializationComplete () {
   assert.deepStrictEqual(commits.at(-1), { type: 'INIT_INPROGRESS', payload: false })
 }
 
+async function testInitializeAllListsClearsProgressAfterFailure () {
+  const failure = new Error('API unavailable')
+  const { helpers } = makeActionsModule({
+    SongsService: {
+      async getAllData () {
+        throw failure
+      }
+    }
+  })
+  const commits = []
+  const getters = {
+    songList: [],
+    instrumentList: [],
+    instrumentBankList: [],
+    presetList: [],
+    gigList: []
+  }
+
+  await assert.rejects(
+    () => helpers.initializeAllLists((type, payload) => commits.push({ type, payload }), getters),
+    failure
+  )
+  assert(!commits.find(commit => commit.type === 'INIT_ALL'))
+  assert.deepStrictEqual(commits.at(-1), { type: 'INIT_INPROGRESS', payload: false })
+}
+
 async function testUpdateInstrumentPersistsPayload () {
   const { actions, serviceCalls } = makeActionsModule()
   const commits = []
@@ -645,6 +671,24 @@ async function testUpdateSongPersistsBeforeCommit () {
 
   assert.deepStrictEqual(serviceCalls.songsPut, [song])
   assert.deepStrictEqual(commits, [{ type: 'UPDATE_SONG', payload: song }])
+}
+
+async function testUpdateSongDoesNotCommitAfterSaveFailure () {
+  const failure = new Error('Save failed')
+  const { actions } = makeActionsModule({
+    SongsService: {
+      async putSong () {
+        throw failure
+      }
+    }
+  })
+  const commits = []
+
+  await assert.rejects(
+    () => actions.updateSong({ commit: (type, payload) => commits.push({ type, payload }) }, { id: 1 }),
+    failure
+  )
+  assert.deepStrictEqual(commits, [])
 }
 
 async function testUpdatePresetWaitsForApiBeforeCommit () {
@@ -947,7 +991,8 @@ function testGettersReturnStateAndPresetLookup () {
 }
 
 function testMutationsUpdateState () {
-  const mutations = makeMutationsModule().default
+  const loadedMutations = makeMutationsModule()
+  const mutations = loadedMutations.default || loadedMutations
   const state = {
     songList: [{ id: 1, name: 'Old', programList: [{ id: 1, tytle: 'A', presetList: [{ id: 1, refpreset: 1, volume: 1 }] }] }],
     instrumentList: [{ id: 1, name: 'Old Instrument' }],
@@ -1973,6 +2018,26 @@ async function testGigControlPanelBusinessMethods () {
   assert.deepStrictEqual(context.dispatches.at(-1), { type: 'setSelectedGigId', payload: -1 })
 }
 
+async function testGigControlPanelKeepsDirtyStateAfterSaveFailure () {
+  const component = loadVueComponent('components/GigControlPanel.vue', {
+    '@/components/globals/Metronome': {}
+  }, {})
+  const context = makeComponentContext(component, {
+    currentSong: { id: 10 },
+    currentSongId: 10,
+    dataChanged: true,
+    $store: {
+      dispatch () {
+        return Promise.reject(new Error('API unavailable'))
+      }
+    }
+  })
+
+  await context.saveSong()
+  assert.strictEqual(context.dataChanged, true)
+  assert.strictEqual(context.saveError, 'Save failed. Your unsaved changes have been kept.')
+}
+
 async function testGigControlPanelBlocksUiSelectionWithUnsavedChanges () {
   const component = loadVueComponent('components/GigControlPanel.vue')
   const songA = { id: 10, name: 'Song A', tempo: 120, programList: [] }
@@ -2319,7 +2384,7 @@ function testBoostFlagReplacesMuteInPresetUi () {
   assert(presetControlSource.includes('v-model="songPreset.boostflag"'), 'PresetControl.vue should bind Boost to boostflag')
   assert(songPresetsSource.includes("{ text: 'boost', value: 'boostflag' }"), 'SongPresetsPanel.vue should show boostflag')
   assert(!songPresetsSource.includes("{ text: 'mute', value: 'muteflag' }"), 'SongPresetsPanel.vue still exposes muteflag as the active column')
-  assert(actionsSource.includes("'boostflag': 0"), 'New songs should default boostflag to 0')
+  assert(/['\"]?boostflag['\"]?: 0/.test(actionsSource), 'New songs should default boostflag to 0')
   assert(mutationsSource.includes("Vue.set(preset, 'boostflag'"), 'Existing presets should receive boostflag reactively')
 }
 
@@ -2407,9 +2472,11 @@ async function run () {
     testAddNewSongBuildsDefaultProgramsAndPresets,
     testUpdateGigSongCollectionMapsShortSongList,
     testInitializeAllListsMarksInitializationComplete,
+    testInitializeAllListsClearsProgressAfterFailure,
     testSimpleListActionsCommitPayloads,
     testAddEntityActionsAssignIdsPersistAndCommit,
     testUpdateSongPersistsBeforeCommit,
+    testUpdateSongDoesNotCommitAfterSaveFailure,
     testUpdateInstrumentPersistsPayload,
     testUpdatePresetWaitsForApiBeforeCommit,
     testDeletePresetWaitsForApiBeforeCommit,
@@ -2453,6 +2520,7 @@ async function run () {
     testPresetsPanelBusinessMethods,
     testPresetControlBusinessMethods,
     testGigControlPanelBusinessMethods,
+    testGigControlPanelKeepsDirtyStateAfterSaveFailure,
     testGigControlPanelBlocksUiSelectionWithUnsavedChanges,
     testGigControlPanelPopupSelectionSendsSongMessageForCurrentSong,
     testGigControlPanelAdjacentSongButtonsWrapWithinGigSongs,
