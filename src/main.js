@@ -5,10 +5,10 @@ import router from './router'
 import Store from './store'
 import vuetify from './plugins/vuetify'
 
-import logger from './plugins/logger'
+import './plugins/logger'
 
 import VueSocketIOExt from 'vue-socket.io-extended'
-import io from 'socket.io-client'
+import socket from '@/store/socket-instance'
 import CustomPanel from '@/components/globals/CustomPanel'
 import MyKnob from '@/components/globals/MyKnob'
 
@@ -28,9 +28,6 @@ Vue.component('MyKnob', MyKnob)
 
 const store = Store
 
-const config = require('@/config/config')
-
-const socket = io(`${config.messageURL}`)
 Vue.use(VueSocketIOExt, socket, { store })
 
 Vue.config.productionTip = false
@@ -50,6 +47,5 @@ export default new Vue({
   router,
   store,
   vuetify,
-  logger,
   render: h => h(App)
 }).$mount('#app')

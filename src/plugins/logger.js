@@ -12,13 +12,3 @@ const options = {
   showConsoleColors: true
 }
 Vue.use(VueLogger, options)
-
-export default ({
-  app,
-  store
-}, inject) => {
-  // console.debug('Initializing Logger', options)
-  VueLogger.install(Vue, options)
-  app['$log'] = Vue.$log
-  store['$log'] = Vue.$log
-}

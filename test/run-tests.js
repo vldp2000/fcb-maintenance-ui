@@ -1128,6 +1128,17 @@ function testApiClientUsesBoundedRequestTimeout () {
   assert(/timeout:\s*7000/.test(source), 'API client should stop waiting after seven seconds')
 }
 
+function testUiUsesOneSharedSocketConnection () {
+  const mainSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'main.js'), 'utf8')
+  const actionsSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'store', 'actions.js'), 'utf8')
+  const socketSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'store', 'socket-instance.js'), 'utf8')
+
+  assert(mainSource.includes("import socket from '@/store/socket-instance'"))
+  assert(actionsSource.includes("import socketClient from '@/store/socket-instance'"))
+  assert(!mainSource.includes("import io from 'socket.io-client'"))
+  assert.strictEqual((socketSource.match(/io\(/g) || []).length, 1)
+}
+
 async function testSongsServiceGetSongItemsMapsSongProgramList () {
   const { SongsService, calls } = makeSongsServiceModule({
     id: 10,
@@ -2526,6 +2537,7 @@ async function run () {
     testMutationsUpdateState,
     testMutationsHandleMissingRecordsWithoutThrowing,
     testApiClientUsesBoundedRequestTimeout,
+    testUiUsesOneSharedSocketConnection,
     testSongsServiceGetSongItemsMapsSongProgramList,
     testSongsServiceMapsApiRequests,
     testGigsServiceMapsApiRequests,
