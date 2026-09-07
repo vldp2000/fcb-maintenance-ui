@@ -3,6 +3,7 @@ const config = require('@/config/config')
 
 export default () => {
   return axios.create({
-    baseURL: config.API_URL
+    baseURL: config.API_URL,
+    timeout: 7000
   })
 }

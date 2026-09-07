@@ -1095,6 +1095,39 @@ function testMutationsUpdateState () {
   assert.strictEqual(state.presetVolumeFromController, 14)
 }
 
+function testMutationsHandleMissingRecordsWithoutThrowing () {
+  const loadedMutations = makeMutationsModule()
+  const mutations = loadedMutations.default || loadedMutations
+  const state = {
+    songList: [],
+    instrumentList: [],
+    presetList: [],
+    instrumentBankList: [],
+    gigList: [],
+    gigSongList: []
+  }
+
+  mutations.UPDATE_SONG(state, { id: 1, name: 'Recovered Song' })
+  mutations.UPDATE_INSTRUMENT(state, { id: 2, name: 'Recovered Instrument' })
+  mutations.UPDATE_INSTRUMENTBANK(state, { id: 3, name: 'Recovered Bank' })
+  mutations.UPDATE_GIG(state, { id: 4, name: 'Recovered Gig' })
+  mutations.UPDATE_GIGSONG(state, { id: 5, name: 'Recovered Gig Song' })
+  mutations.UPDATE_SONGPROGRAM(state, { refsong: 999, id: 1, tytle: 'Missing' })
+  mutations.UPDATE_SONGPROGRAMPRESET(state, { refsong: 999, refsongprogram: 1, id: 1 })
+  mutations.POPULATE_GIG_SONGS(state, { gigId: 999, songs: [] })
+
+  assert.deepStrictEqual(state.songList, [{ id: 1, name: 'Recovered Song' }])
+  assert.deepStrictEqual(state.instrumentList, [{ id: 2, name: 'Recovered Instrument' }])
+  assert.deepStrictEqual(state.instrumentBankList, [{ id: 3, name: 'Recovered Bank' }])
+  assert.deepStrictEqual(state.gigList, [{ id: 4, name: 'Recovered Gig' }])
+  assert.deepStrictEqual(state.gigSongList, [{ id: 5, name: 'Recovered Gig Song' }])
+}
+
+function testApiClientUsesBoundedRequestTimeout () {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'services', 'Api.js'), 'utf8')
+  assert(/timeout:\s*7000/.test(source), 'API client should stop waiting after seven seconds')
+}
+
 async function testSongsServiceGetSongItemsMapsSongProgramList () {
   const { SongsService, calls } = makeSongsServiceModule({
     id: 10,
@@ -2491,6 +2524,8 @@ async function run () {
     testInstrumentImagesInitializedHandlesEmptyList,
     testGettersReturnStateAndPresetLookup,
     testMutationsUpdateState,
+    testMutationsHandleMissingRecordsWithoutThrowing,
+    testApiClientUsesBoundedRequestTimeout,
     testSongsServiceGetSongItemsMapsSongProgramList,
     testSongsServiceMapsApiRequests,
     testGigsServiceMapsApiRequests,
