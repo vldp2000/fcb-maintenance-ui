@@ -202,6 +202,10 @@ const actions = {
     await SongsService.putSong(song)
     commit(types.UPDATE_SONG, song)
   },
+  async updateSongPresets ({ commit }, song) {
+    await SongsService.putSongPresets(song)
+    commit(types.UPDATE_SONG, song)
+  },
   refreshSong ({ commit }, songId) {
     commit(types.REFRESH_SONG, songId)
   },

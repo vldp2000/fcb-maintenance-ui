@@ -17,11 +17,24 @@ export default {
     }
   },
 
+  async getSongPresetHistory (songId) {
+    const result = await Api().get(`history/songpresets/${songId}`)
+    return result.data
+  },
+
   async putSong (song) {
     const songObj = Object.assign({}, song)
     delete songObj.ordernumber
     delete songObj.createdAt
     delete songObj.updatedAt
     return Api().put(`song/${songObj.id}`, songObj)
+  },
+
+  async putSongPresets (song) {
+    const songObj = Object.assign({}, song)
+    delete songObj.ordernumber
+    delete songObj.createdAt
+    delete songObj.updatedAt
+    return Api().put(`songpresets/${songObj.id}`, songObj)
   }
 }

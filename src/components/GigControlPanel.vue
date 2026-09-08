@@ -38,7 +38,7 @@
            </metronome>
         </div>
       </v-col>
-      <v-col cols="12" md="5">
+      <v-col cols="12" md="4">
         <div v-if="currentSongList" class="currentSongSelector">
           <button class="currentSongNavButton" @click="selectPreviousSong()">&lt;&lt;</button>
           <div
@@ -51,8 +51,19 @@
           <button class="currentSongNavButton" @click="selectNextSong()">&gt;&gt;</button>
         </div>
       </v-col>
-       <v-col cols="12" md="1">
+       <v-col cols="12" md="2">
         <div class="songActionPanel">
+          <v-btn
+            small
+            outlined
+            color="light-blue lighten-2"
+            class="historyButton"
+            :disabled="currentSongId <= 0"
+            @click="openHistory()"
+          >
+            <v-icon small left>history</v-icon>
+            History
+          </v-btn>
           <v-icon medium
             v-bind:class="(dataChanged) ? 'songActionButtonActive saveSongButtonHighighted' : 'songActionButtonInactive saveSongButton'"
             @click="saveSong()"
@@ -98,6 +109,46 @@
       </div>
     </div>
   </div>
+  <v-dialog v-model="historyDialog" max-width="720px">
+    <v-card dark class="historyDialog">
+      <v-card-title class="headline">Song Preset History</v-card-title>
+      <v-card-subtitle v-if="currentSong">
+        {{ currentSong.id }}. {{ currentSong.name }}
+      </v-card-subtitle>
+      <v-card-text>
+        <v-progress-linear v-if="historyLoading" indeterminate color="light-blue lighten-2"></v-progress-linear>
+        <v-alert v-if="historyError" type="error" dense>{{ historyError }}</v-alert>
+        <div v-if="!historyLoading && !historyError && historyRecords.length === 0" class="historyEmpty">
+          No saved history for this song.
+        </div>
+        <v-radio-group v-if="!historyLoading && historyRecords.length > 0" v-model="selectedHistoryId">
+          <v-list dark dense class="historyList">
+            <v-list-item
+              v-for="record in historyRecords"
+              :key="record.id"
+              class="historyRecord"
+              @click="selectedHistoryId = record.id"
+            >
+              <v-list-item-action>
+                <v-radio :value="record.id" color="light-blue lighten-2"></v-radio>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title>{{ formatHistoryDate(record.savedAt) }}</v-list-item-title>
+                <v-list-item-subtitle>{{ historyRecordSummary(record) }}</v-list-item-subtitle>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-radio-group>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn text @click="historyDialog = false">Cancel</v-btn>
+        <v-btn color="light-blue lighten-2" text :disabled="!selectedHistoryId" @click="applyHistory()">
+          Apply
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
   <v-dialog v-model="unsavedChangesDialog" max-width="460px">
     <v-card dark class="unsavedChangesDialog">
       <v-card-title class="headline">Unsaved Changes</v-card-title>
@@ -298,6 +349,7 @@
 import { mapState } from 'vuex'
 // const config = require('@/config/config')
 import Metronome from '@/components/globals/Metronome'
+import SongsService from '@/services/SongsService'
 
 export default {
   components: {
@@ -315,6 +367,11 @@ export default {
       saveError: '',
       songReloadPending: false,
       songPickerOpen: false,
+      historyDialog: false,
+      historyLoading: false,
+      historyError: '',
+      historyRecords: [],
+      selectedHistoryId: null,
       unsavedChangesDialog: false,
       unsavedChangesMessage: '',
       currentPedal1Value: 1,
@@ -498,6 +555,43 @@ export default {
     closeSongPicker () {
       this.songPickerOpen = false
     },
+    async openHistory () {
+      if (!this.currentSong || this.currentSong.id <= 0) return
+
+      this.historyDialog = true
+      this.historyLoading = true
+      this.historyError = ''
+      this.historyRecords = []
+      this.selectedHistoryId = null
+      try {
+        this.historyRecords = await SongsService.getSongPresetHistory(this.currentSong.id)
+      } catch (ex) {
+        this.$log.error(ex)
+        this.historyError = 'Could not load song preset history.'
+      } finally {
+        this.historyLoading = false
+      }
+    },
+    formatHistoryDate (savedAt) {
+      const date = new Date(savedAt)
+      return Number.isNaN(date.getTime()) ? savedAt : date.toLocaleString()
+    },
+    historyRecordSummary (record) {
+      const programs = Array.isArray(record.programList) ? record.programList : []
+      const presetCount = programs.reduce((count, program) =>
+        count + (Array.isArray(program.presetList) ? program.presetList.length : 0), 0)
+      return `${programs.length} programs, ${presetCount} presets`
+    },
+    applyHistory () {
+      const record = this.historyRecords.find(item => item.id === this.selectedHistoryId)
+      if (!record || !Array.isArray(record.programList) || !this.currentSong) return
+      if (this.dataChanged && !confirm('Applying history will replace your current unsaved changes. Continue?')) return
+
+      this.currentSong.programList = JSON.parse(JSON.stringify(record.programList))
+      this.dataChanged = true
+      this.songReloadPending = false
+      this.historyDialog = false
+    },
     async chooseSong (song) {
       if (song && song.id !== this.currentSongId && !this.canChangeSelection('Save the current song changes before selecting another song.')) {
         return
@@ -671,7 +765,7 @@ export default {
     async saveSong () {
       this.saveError = ''
       try {
-        await this.$store.dispatch('updateSong', this.currentSong)
+        await this.$store.dispatch('updateSongPresets', this.currentSong)
         await this.$store.dispatch('selectSong', this.currentSongId)
         this.dataChanged = false
         this.songReloadPending = false
@@ -947,6 +1041,24 @@ export default {
   border: 2px solid #0b3f9f;
   box-shadow: 4px 5px 9px -2px rgba(35, 116, 221, 0.72);
 }
+.historyDialog {
+  color: #eceff1;
+  background-color: rgba(12, 16, 22, 0.98) !important;
+  border: 2px solid #0b3f9f;
+}
+.historyList {
+  max-height: 420px;
+  overflow-y: auto;
+  background-color: rgba(8, 12, 18, 0.86) !important;
+}
+.historyRecord {
+  border-bottom: 1px solid rgba(144, 202, 249, 0.22);
+}
+.historyEmpty {
+  padding: 24px 0;
+  color: #b0bec5;
+  text-align: center;
+}
 
 .songActionPanel {
   display: flex;
@@ -955,7 +1067,11 @@ export default {
   align-items: flex-start;
   justify-content: flex-start;
   gap: 6px;
-  min-width: 94px;
+  min-width: 218px;
+}
+.historyButton {
+  height: 48px !important;
+  margin-top: 1px;
 }
 .songActionButtonInactive,
 .songActionButtonActive {

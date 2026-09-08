@@ -208,6 +208,7 @@ function makeActionsModule (serviceOverrides = {}) {
     instrumentsPut: [],
     songsGetById: [],
     songsPut: [],
+    songPresetsPut: [],
     presetsPut: [],
     presetsDelete: [],
     instrumentBanksPut: [],
@@ -236,6 +237,9 @@ function makeActionsModule (serviceOverrides = {}) {
       },
       async putSong (song) {
         serviceCalls.songsPut.push(song)
+      },
+      async putSongPresets (song) {
+        serviceCalls.songPresetsPut.push(song)
       },
       async getSongItems (songId) {
         serviceCalls.songsGetById.push(songId)
@@ -670,6 +674,17 @@ async function testUpdateSongPersistsBeforeCommit () {
   await actions.updateSong({ commit }, song)
 
   assert.deepStrictEqual(serviceCalls.songsPut, [song])
+  assert.deepStrictEqual(commits, [{ type: 'UPDATE_SONG', payload: song }])
+}
+
+async function testUpdateSongPresetsPersistsHistoryBeforeCommit () {
+  const { actions, serviceCalls } = makeActionsModule()
+  const { commits, commit } = makeCommitRecorder()
+  const song = { id: 1, name: 'Song', programList: [] }
+
+  await actions.updateSongPresets({ commit }, song)
+
+  assert.deepStrictEqual(serviceCalls.songPresetsPut, [song])
   assert.deepStrictEqual(commits, [{ type: 'UPDATE_SONG', payload: song }])
 }
 
@@ -1157,6 +1172,7 @@ async function testSongsServiceMapsApiRequests () {
 
   assert.deepStrictEqual(await service.getAllData(), { id: 31, programList: [] })
   assert.strictEqual(await service.getId(), 31)
+  assert.deepStrictEqual(await service.getSongPresetHistory(31), { id: 31, programList: [] })
   await service.putSong({
     id: 31,
     name: 'Song',
@@ -1164,16 +1180,32 @@ async function testSongsServiceMapsApiRequests () {
     createdAt: 'old',
     updatedAt: 'new'
   })
+  await service.putSongPresets({
+    id: 31,
+    name: 'Song',
+    programList: [],
+    ordernumber: 1
+  })
 
   assert.deepStrictEqual(calls, [
     { method: 'GET', url: 'all/song' },
     { method: 'GET', url: 'id/song' },
+    { method: 'GET', url: 'history/songpresets/31' },
     {
       method: 'PUT',
       url: 'song/31',
       body: {
         id: 31,
         name: 'Song'
+      }
+    },
+    {
+      method: 'PUT',
+      url: 'songpresets/31',
+      body: {
+        id: 31,
+        name: 'Song',
+        programList: []
       }
     }
   ])
@@ -2045,7 +2077,7 @@ async function testGigControlPanelBusinessMethods () {
     { type: 'selectSongProgram', payload: 3 },
     { type: 'selectSong', payload: 10 },
     { type: 'setGigAsScheduled', payload: 1 },
-    { type: 'updateSong', payload: songA },
+    { type: 'updateSongPresets', payload: songA },
     { type: 'selectSong', payload: 10 }
   ])
   assert.strictEqual(context.dataChanged, false)
@@ -2080,6 +2112,69 @@ async function testGigControlPanelKeepsDirtyStateAfterSaveFailure () {
   await context.saveSong()
   assert.strictEqual(context.dataChanged, true)
   assert.strictEqual(context.saveError, 'Save failed. Your unsaved changes have been kept.')
+}
+
+async function testGigControlPanelLoadsAndAppliesSongPresetHistory () {
+  const historyRecords = [{
+    id: 'snapshot.json',
+    savedAt: '2026-09-08T10:00:00.000Z',
+    programList: [{ id: 1, presetList: [{ id: 1, volume: 85 }] }]
+  }]
+  const component = loadVueComponent('components/GigControlPanel.vue', {
+    '@/components/globals/Metronome': {},
+    '@/services/SongsService': {
+      __esModule: true,
+      default: {
+        async getSongPresetHistory (songId) {
+          assert.strictEqual(songId, 10)
+          return historyRecords
+        }
+      }
+    }
+  }, {})
+  const currentSong = {
+    id: 10,
+    name: 'Song A',
+    programList: [{ id: 1, presetList: [{ id: 1, volume: 60 }] }]
+  }
+  const context = makeComponentContext(component, {
+    currentSong,
+    currentSongId: 10
+  })
+
+  await context.openHistory()
+  assert.strictEqual(context.historyDialog, true)
+  assert.strictEqual(context.historyLoading, false)
+  assert.deepStrictEqual(context.historyRecords, historyRecords)
+
+  context.selectedHistoryId = 'snapshot.json'
+  context.applyHistory()
+  assert.deepStrictEqual(currentSong.programList, historyRecords[0].programList)
+  assert.notStrictEqual(currentSong.programList, historyRecords[0].programList)
+  assert.strictEqual(context.dataChanged, true)
+  assert.strictEqual(context.songReloadPending, false)
+  assert.strictEqual(context.historyDialog, false)
+}
+
+async function testGigControlPanelConfirmsBeforeReplacingUnsavedHistory () {
+  const component = loadVueComponent('components/GigControlPanel.vue')
+  const programList = [{ id: 1, presetList: [{ volume: 60 }] }]
+  const context = makeComponentContext(component, {
+    currentSong: { id: 10, programList },
+    dataChanged: true,
+    historyRecords: [{ id: 'snapshot.json', programList: [{ id: 1, presetList: [{ volume: 85 }] }] }],
+    selectedHistoryId: 'snapshot.json'
+  })
+  const originalConfirm = global.confirm
+  global.confirm = () => false
+  try {
+    context.applyHistory()
+  } finally {
+    global.confirm = originalConfirm
+  }
+
+  assert.strictEqual(context.currentSong.programList, programList)
+  assert.strictEqual(context.dataChanged, true)
 }
 
 async function testGigControlPanelBlocksUiSelectionWithUnsavedChanges () {
@@ -2520,6 +2615,7 @@ async function run () {
     testSimpleListActionsCommitPayloads,
     testAddEntityActionsAssignIdsPersistAndCommit,
     testUpdateSongPersistsBeforeCommit,
+    testUpdateSongPresetsPersistsHistoryBeforeCommit,
     testUpdateSongDoesNotCommitAfterSaveFailure,
     testUpdateInstrumentPersistsPayload,
     testUpdatePresetWaitsForApiBeforeCommit,
@@ -2568,6 +2664,8 @@ async function run () {
     testPresetControlBusinessMethods,
     testGigControlPanelBusinessMethods,
     testGigControlPanelKeepsDirtyStateAfterSaveFailure,
+    testGigControlPanelLoadsAndAppliesSongPresetHistory,
+    testGigControlPanelConfirmsBeforeReplacingUnsavedHistory,
     testGigControlPanelBlocksUiSelectionWithUnsavedChanges,
     testGigControlPanelPopupSelectionSendsSongMessageForCurrentSong,
     testGigControlPanelAdjacentSongButtonsWrapWithinGigSongs,
