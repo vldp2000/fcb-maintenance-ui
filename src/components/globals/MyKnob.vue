@@ -148,7 +148,7 @@ export default {
       if (val < this.min) {
         return this.printError('[VueSlideBar error]: The maximum value can not be less than the minimum value.')
       }
-      let resetVal = this.limitValue(this.val)
+      const resetVal = this.limitValue(this.val)
       this.setValue(resetVal)
       this.refresh()
     },
@@ -156,7 +156,7 @@ export default {
       if (val > this.max) {
         return this.printError('[VueSlideBar error]: The minimum value can not be greater than the maximum value.')
       }
-      let resetVal = this.limitValue(this.val)
+      const resetVal = this.limitValue(this.val)
       this.setValue(resetVal)
       this.refresh()
     }
@@ -168,7 +168,7 @@ export default {
       },
       set (val) {
         if (this.data) {
-          let index = this.data.indexOf(val)
+          const index = this.data.indexOf(val)
           if (index > -1) {
             this.setCurrentValue(index, true)
           }
@@ -190,7 +190,7 @@ export default {
       return this.data ? (this.data.length - 1) : this.max
     },
     multiple () {
-      let decimals = `${this.interval}`.split('.')[1]
+      const decimals = `${this.interval}`.split('.')[1]
       return decimals ? Math.pow(10, decimals.length) : 1
     },
     spacing () {
@@ -219,7 +219,7 @@ export default {
   },
   methods: {
     onClick (item) {
-      let that = this
+      const that = this
       try {
         singleOrDoubleRowClick(item,
           function singleCLick (item) {
@@ -250,12 +250,12 @@ export default {
       document.removeEventListener('mouseleave', this.moveEnd)
     },
     getPos (e) {
-      let result = e.clientX - this.offset
+      const result = e.clientX - this.offset
       return result
     },
     wrapClick (e) {
       if (this.isDisabled || (!this.draggable && e.target.id === this.id)) return false
-      let pos = this.getPos(e)
+      const pos = this.getPos(e)
       this.setValueOnPos(pos)
     },
     moveStart (e, index) {
@@ -280,10 +280,10 @@ export default {
       this.flag = false
     },
     setValueOnPos (pos, isDrag) {
-      let range = this.limit
-      let valueRange = this.valueLimit
+      const range = this.limit
+      const valueRange = this.valueLimit
       if (pos >= range[0] && pos <= range[1]) {
-        let v = (Math.round(pos / this.gap) * (this.spacing * this.multiple) + (this.minimum * this.multiple)) / this.multiple
+        const v = (Math.round(pos / this.gap) * (this.spacing * this.multiple) + (this.minimum * this.multiple)) / this.multiple
         this.setCurrentValue(v, isDrag)
       } else if (pos < range[0]) {
         this.setCurrentValue(valueRange[0])
@@ -315,7 +315,7 @@ export default {
     },
     setValue (val, speed) {
       if (this.isDiff(this.val, val)) {
-        let resetVal = this.limitValue(val)
+        const resetVal = this.limitValue(val)
         this.val = resetVal
       }
     },

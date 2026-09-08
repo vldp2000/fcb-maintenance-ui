@@ -1,4 +1,3 @@
-
 <template>
   <v-card
     class="mx-auto ma-0 pa-0"
@@ -278,9 +277,14 @@ export default {
           if (typeof this.instrumentList !== 'undefined' && this.instrumentList &&
             this.songPreset.refinstrument > 0) {
             const instrument = this.instrumentList.find(item => item.id === this.songPreset.refinstrument)
-            this.imageURL = instrument.imageURL
-            this.midichannel = instrument.midichannel
-            this.populatePresetList(this.songPreset.refinstrument)
+            if (instrument) {
+              this.imageURL = instrument.imageURL
+              this.midichannel = instrument.midichannel
+              this.populatePresetList(this.songPreset.refinstrument)
+            } else {
+              this.imageURL = ''
+              this.midichannel = 0
+            }
           }
         } else {
           this.$log.debug('------------- empty -----')
@@ -388,8 +392,8 @@ export default {
       if (typeof this.presetList !== 'undefined' && this.presetList !== null &&
         typeof this.songPreset !== 'undefined' && this.songPreset !== null) {
         // this.$log.debug('---get--preset--------------')
-        let list = await this.presetList.filter(item => item.refinstrument === id)
-        this.presets = await _sortBy(list, 'name')
+        const list = this.presetList.filter(item => item.refinstrument === id)
+        this.presets = _sortBy(list, 'name')
         // this.$log.debug(this.presets)
       }
     },
@@ -401,7 +405,7 @@ export default {
         this.songPreset.refpreset = this.presetId
         this.songPreset.refinstrumentbank = preset.refinstrumentbank
         this.songPreset.refinstrument = preset.refinstrument
-        if (preset.midipc === 0) {
+        if (Number(preset.midipc) === 0) {
           this.songPreset.volume = 0
           this.songPreset.pan = 64
         }

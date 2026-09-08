@@ -119,6 +119,9 @@
       </v-btn>
     </v-app-bar>
     <v-content>
+      <v-alert v-if="initializationError" type="error" prominent>
+        {{ initializationError }}
+      </v-alert>
       <!-- Display view pages here based on route -->
       <router-view></router-view>
     </v-content>
@@ -137,9 +140,11 @@ export default {
   data: () => ({
     drawer: null,
     appVersion: process.env.VUE_APP_VERSION || '0.0.0',
+    initializationError: '',
     items: [
       { icon: 'mdi-desktop-classic', text: 'gigcontrol', link: '/gigcontrol' },
-      { icon: 'mdi-chevron-up',
+      {
+        icon: 'mdi-chevron-up',
         'icon-alt': 'mdi-chevron-down',
         text: 'Maintenance',
         model: false,
@@ -170,10 +175,12 @@ export default {
       try {
         if (!this.allInitialized && !this.initialisingIsInProgress) {
           // this.$log.debug(' >>> Init all related collections in storage1')
-          this.$store.dispatch('initAllLists', true)
+          this.initializationError = ''
+          await this.$store.dispatch('initAllLists', true)
         }
       } catch (ex) {
-        this.$log.debug(ex)
+        this.$log.error(ex)
+        this.initializationError = 'Could not load controller data. Check the API connection and reload.'
       }
     }
   }

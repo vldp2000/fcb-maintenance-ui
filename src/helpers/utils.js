@@ -1,3 +1,4 @@
+import Vue from 'vue'
 
 let clickCount = 0
 let clickTimer = null
@@ -16,6 +17,6 @@ export function singleOrDoubleRowClick (item, singleClickFunc, doubleClickFunc) 
       doubleClickFunc(item)
     }
   } catch (ex) {
-    this.$log.debug(ex)
+    Vue.$log.error(ex)
   }
 }

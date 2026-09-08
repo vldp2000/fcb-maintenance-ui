@@ -143,7 +143,7 @@ export default {
     },
     onClick (item) {
       try {
-        let that = this
+        const that = this
         singleOrDoubleRowClick(item,
           function singleCLick (item) {
             that.$log.debug('Single Click')

@@ -149,20 +149,20 @@ export default {
     init: async function () {
       if (this.gig) {
         this.gigSonglist = []
-        for (let item of (this.gig.songList || [])) {
-          const song = await Object.assign({}, item)
-          await this.gigSonglist.push(song)
+        for (const item of (this.gig.songList || [])) {
+          const song = Object.assign({}, item)
+          this.gigSonglist.push(song)
         }
       }
       if (this.songList) {
         let list = []
-        for (let song of this.songList) {
-          let sn = await Object.assign({}, song)
-          await list.push(sn)
+        for (const song of this.songList) {
+          const sn = Object.assign({}, song)
+          list.push(sn)
         }
 
-        for (let song of this.gigSonglist) {
-          list = await list.filter(item => item.id !== song.id)
+        for (const song of this.gigSonglist) {
+          list = list.filter(item => item.id !== song.id)
         }
         this.allSongList = list
         // console.log(this.gigSonglist)
@@ -187,7 +187,7 @@ export default {
       this.savingOrder = true
       this.savingOrderMessage = 'Saving gig songs...'
       try {
-        const payload = { 'gig': this.gig, 'songList': this.gigSonglist }
+        const payload = { gig: this.gig, songList: this.gigSonglist }
         await this.$store.dispatch('saveGigSongs', payload)
       } finally {
         this.savingOrder = false

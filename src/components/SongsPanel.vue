@@ -324,7 +324,7 @@ export default {
         this.expanded.pop()
       }
 
-      let song = this.songList.find(sn => sn.id === value.id)
+      const song = this.songList.find(sn => sn.id === value.id)
       // this.$log.debug(song)
 
       if (!song.programList || song.programList.length === 0) {
