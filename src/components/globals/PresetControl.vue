@@ -33,7 +33,7 @@
             :disabled="volume <= 0"
             aria-label="Decrease volume by 5"
             @click="adjustVolume(-5)"
-          >&lt;&lt;</button>
+          ><v-icon small>mdi-chevron-double-left</v-icon></button>
           <div class="customKnob">
             <my-knob
               v-model='volume'
@@ -51,7 +51,7 @@
             :disabled="volume >= 127"
             aria-label="Increase volume by 5"
             @click="adjustVolume(5)"
-          >&gt;&gt;</button>
+          ><v-icon small>mdi-chevron-double-right</v-icon></button>
         </div>
         <div class="customKnob">
           <my-knob
@@ -70,7 +70,7 @@
             :readonly="!editMode"
             class="ma-0 pa-0 checkbox"
             dense hide-details
-            label="Boost"
+            label="Bst"
             :disabled="volume == 0"
             v-model="songPreset.boostflag" />
           <v-checkbox
@@ -546,16 +546,16 @@ export default {
   }
   .effectToggleGrid {
     display: grid;
-    grid-template-columns: 58px 50px;
+    grid-template-columns: 44px 44px;
     grid-template-rows: 24px 24px;
-    column-gap: 2px;
-    row-gap: 2px;
-    margin-left: 12px;
+    column-gap: 0;
+    row-gap: 1px;
+    margin-left: 4px;
     margin-top: 3px;
     align-items: center;
   }
   .effectToggleGrid .checkbox:nth-child(odd) {
-    margin-left: 6px!important;
+    margin-left: 0!important;
   }
   .presetHeader .instrumentImage {
     height: 40px;

@@ -2531,7 +2531,7 @@ function testBoostFlagReplacesMuteInPresetUi () {
   const actionsSource = readSrcFile('store/actions.js')
   const mutationsSource = readSrcFile('store/mutations.js')
 
-  assert(presetControlSource.includes('label="Boost"'), 'PresetControl.vue should label boost as Boost')
+  assert(presetControlSource.includes('label="Bst"'), 'PresetControl.vue should abbreviate boost as Bst')
   assert(!presetControlSource.includes('label="Mute"'), 'PresetControl.vue still labels the live flag as Mute')
   assert(presetControlSource.includes('v-model="songPreset.boostflag"'), 'PresetControl.vue should bind Boost to boostflag')
   assert(songPresetsSource.includes("{ text: 'boost', value: 'boostflag' }"), 'SongPresetsPanel.vue should show boostflag')
@@ -2547,12 +2547,12 @@ function testPresetControlUsesCompactEffectToggleGrid () {
   assert(!presetControlSource.includes('<custom-text-input'), 'PresetControl.vue should not render old effect value text inputs')
   assert(!presetControlSource.includes('class="valueInput"'), 'PresetControl.vue should not keep old effect value input layout')
 
-  const boostIndex = presetControlSource.indexOf('label="Boost"')
+  const boostIndex = presetControlSource.indexOf('label="Bst"')
   const revIndex = presetControlSource.indexOf('label="Rev"')
   const delIndex = presetControlSource.indexOf('label="Del"')
   const modIndex = presetControlSource.indexOf('label="Mod"')
 
-  assert(boostIndex > -1 && revIndex > boostIndex, 'PresetControl.vue should render Boost then Rev in the top row')
+  assert(boostIndex > -1 && revIndex > boostIndex, 'PresetControl.vue should render Bst then Rev in the top row')
   assert(delIndex > revIndex && modIndex > delIndex, 'PresetControl.vue should render Del then Mod in the bottom row')
 }
 

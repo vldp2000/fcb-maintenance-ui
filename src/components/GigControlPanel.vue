@@ -40,7 +40,9 @@
       </v-col>
       <v-col cols="12" md="4">
         <div v-if="currentSongList" class="currentSongSelector">
-          <button class="currentSongNavButton" @click="selectPreviousSong()">&lt;&lt;</button>
+          <button class="currentSongNavButton" aria-label="Previous song" @click="selectPreviousSong()">
+            <v-icon>mdi-chevron-double-left</v-icon>
+          </button>
           <div
             class="currentSongButton"
             @click="openSongPicker()"
@@ -48,7 +50,9 @@
             <div class="currentSongCaption">Current Song</div>
             <div class="currentSongValue">{{ currentSongDisplay }}</div>
           </div>
-          <button class="currentSongNavButton" @click="selectNextSong()">&gt;&gt;</button>
+          <button class="currentSongNavButton" aria-label="Next song" @click="selectNextSong()">
+            <v-icon>mdi-chevron-double-right</v-icon>
+          </button>
         </div>
       </v-col>
        <v-col cols="12" md="2">
