@@ -10,6 +10,7 @@ $ErrorActionPreference = "Stop"
 $sourceRoot = Resolve-Path $PSScriptRoot
 $uiRoot = Resolve-Path $PSScriptRoot
 $distPath = Join-Path $uiRoot "dist"
+$deploymentPath = Join-Path $uiRoot "deployment"
 
 $sourceChanges = git -C $sourceRoot status --porcelain
 if ($sourceChanges -and !$AllowDirty) {
@@ -56,10 +57,12 @@ try {
   }
 
   Get-ChildItem -Force |
-    Where-Object { $_.Name -notin @(".git", ".gitattributes", "AGENTS.md", "deploy-to-rpi.sh", "README.md") } |
+    Where-Object { $_.Name -notin @(".git", ".gitattributes", "AGENTS.md", "README.md") } |
     Remove-Item -Recurse -Force
 
   Copy-Item -Path (Join-Path $distPath "*") -Destination $DistRepoPath -Recurse -Force
+  Copy-Item -LiteralPath (Join-Path $deploymentPath "deploy-to-rpi.sh") -Destination $DistRepoPath -Force
+  Copy-Item -LiteralPath (Join-Path $deploymentPath "lighttpd-spa-fallback.conf") -Destination $DistRepoPath -Force
 
   $sourceBranch = git -C $sourceRoot rev-parse --abbrev-ref HEAD
   $sourceCommit = git -C $sourceRoot rev-parse HEAD

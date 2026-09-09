@@ -42,3 +42,7 @@ The Raspberry Pi 2 should not build the UI. Build locally and publish the genera
 ```powershell
 .\release-ui.ps1 -Push
 ```
+
+The release also publishes the Raspberry Pi deployment script and its Lighttpd
+SPA fallback. The deployment enables direct browser access to routes such as
+`/gigcontrol`, while existing static files continue to be served normally.

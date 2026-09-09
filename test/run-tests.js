@@ -2556,6 +2556,18 @@ function testPresetControlUsesCompactEffectToggleGrid () {
   assert(delIndex > revIndex && modIndex > delIndex, 'PresetControl.vue should render Del then Mod in the bottom row')
 }
 
+function testDeploymentEnablesLighttpdSpaFallback () {
+  const deployScript = fs.readFileSync(path.join(rootDir, 'deployment/deploy-to-rpi.sh'), 'utf8')
+  const fallbackConfig = fs.readFileSync(path.join(rootDir, 'deployment/lighttpd-spa-fallback.conf'), 'utf8')
+  const releaseScript = fs.readFileSync(path.join(rootDir, 'release-ui.ps1'), 'utf8')
+
+  assert(fallbackConfig.includes('url.rewrite-if-not-file'), 'Lighttpd config should preserve real static files')
+  assert(fallbackConfig.includes('"" => "/index.html"'), 'Lighttpd config should route client-side paths to index.html')
+  assert(deployScript.includes('lighty-enable-mod rewrite'), 'Pi deployment should enable Lighttpd rewrite support')
+  assert(deployScript.includes('lighttpd -tt -f /etc/lighttpd/lighttpd.conf'), 'Pi deployment should validate Lighttpd before reload')
+  assert(releaseScript.includes('deploymentPath'), 'UI releases should publish maintained deployment files')
+}
+
 function testLiveSelectionUsesBlurredGradientShadow () {
   for (const file of ['components/GigControlPanel.vue', 'components/MobileGigControlPanel.vue']) {
     const source = readSrcFile(file)
@@ -2694,6 +2706,7 @@ async function run () {
     testModulationEffectIsLabeledModInLiveUi,
     testBoostFlagReplacesMuteInPresetUi,
     testPresetControlUsesCompactEffectToggleGrid,
+    testDeploymentEnablesLighttpdSpaFallback,
     testLiveSelectionUsesBlurredGradientShadow,
     testMetronomeUsesSongBpmForBlinkInterval,
     testPresetNameHasInstrumentGap
