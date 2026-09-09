@@ -4,7 +4,7 @@
     d="info-box"
     ref="infoBox"
     @mousedown="moveStart"
-    @touchstart="moveStart"
+    @touchstart.prevent="moveStart"
     @click="onClick()"
   >
     <vue-svg-gauge
@@ -250,7 +250,9 @@ export default {
       document.removeEventListener('mouseleave', this.moveEnd)
     },
     getPos (e) {
-      const result = e.clientX - this.offset
+      const point = (e.targetTouches && e.targetTouches[0]) ||
+        (e.changedTouches && e.changedTouches[0]) || e
+      const result = point.clientX - this.offset
       return result
     },
     wrapClick (e) {
@@ -261,6 +263,7 @@ export default {
     moveStart (e, index) {
       if (this.editMode) {
         if (!this.draggable) return false
+        this.refresh()
         this.flag = true
         this.$emit('dragStart', this)
       }
@@ -380,6 +383,12 @@ export default {
 
 <!--  change style to calculate the position of the inner text automatically  -->
 <style scoped>
+
+.customknob {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
 
 .custom-label {
   display: flex;

@@ -162,6 +162,10 @@ function makeComponentContext (component, overrides = {}) {
     $emit (eventName, payload) {
       emitted.push({ eventName, payload })
     },
+    $nextTick (callback) {
+      callback()
+    },
+    $refs: {},
     dispatches,
     emitted
   }
@@ -1043,10 +1047,12 @@ function testMutationsUpdateState () {
   assert.strictEqual(state.songList[0].programList[0].tytle, 'Verse')
   state.songList[0].programList[0].presetList = [{ id: 1 }]
   mutations.UPDATE_SONGPROGRAMPRESET(state, {
-    refsong: 2,
-    refsongprogram: 1,
-    id: 1,
+    refsong: '2',
+    refsongprogram: '1',
+    id: '1',
     refpreset: 7,
+    refinstrument: 3,
+    refinstrumentbank: 11,
     volume: 80,
     pan: 64,
     muteflag: 1,
@@ -1059,6 +1065,7 @@ function testMutationsUpdateState () {
   })
   assert.strictEqual(state.songList[0].programList[0].presetList[0].volume, 80)
   assert.strictEqual(state.songList[0].programList[0].presetList[0].boostflag, 1)
+  assert.strictEqual(state.songList[0].programList[0].presetList[0].refinstrumentbank, 11)
 
   mutations.SET_INSTRUMENTLIST(state, [])
   mutations.ADD_INSTRUMENT(state, { id: 3 })
@@ -1667,6 +1674,37 @@ function testGigPanelShowsFriendlyActionsAndSongCount () {
   assert(source.includes('rowActionButton'), 'GigPanel.vue should render bordered action buttons')
 }
 
+function testGigPanelGuardsClosingDirtySongEditor () {
+  const component = loadVueComponent('components/GigPanel.vue', {
+    '@/components/GigSongPanel': {}
+  }, {})
+  const source = readSrcFile('components/GigPanel.vue')
+  const gig = { id: 10, name: 'Gig', songList: [{ id: 1 }] }
+  const context = makeComponentContext(component, {
+    expanded: [gig],
+    selectedGig: gig,
+    songEditorDirty: true
+  })
+  const originalConfirm = global.confirm
+
+  try {
+    global.confirm = () => false
+    assert.strictEqual(context.closeSongs(), false)
+    assert.deepStrictEqual(context.expanded, [gig])
+
+    global.confirm = () => true
+    assert.strictEqual(context.closeSongs(), true)
+    assert.deepStrictEqual(context.expanded, [])
+    assert.strictEqual(context.songEditorDirty, false)
+  } finally {
+    global.confirm = originalConfirm
+  }
+
+  assert(source.includes('@dirty-change="songEditorDirty = $event"'), 'GigPanel.vue should receive the song editor dirty state')
+  assert(source.includes('@request-close="closeSongs"'), 'GigPanel.vue should guard explicit editor close requests')
+  assert(source.includes('beforeRouteLeave (to, from, next)'), 'GigPanel.vue should guard navigation away from a dirty song editor')
+}
+
 async function testGigSongPanelSaveOrderShowsProgress () {
   const component = loadVueComponent('components/GigSongPanel.vue', {}, {})
   let resolveDispatch
@@ -1712,7 +1750,47 @@ function testGigSongPanelUsesScrollableSongGridsAndOrderColumn () {
   assert(source.includes('-webkit-overflow-scrolling: touch;'), 'GigSongPanel.vue should enable momentum scrolling on iPad')
   assert(source.includes('touch-action: pan-y;'), 'GigSongPanel.vue should preserve vertical touch gestures')
   assert.strictEqual((source.match(/:delay-on-touch-only="true"/g) || []).length, 2, 'Both song grids should distinguish touch scrolling from dragging')
+  assert(source.includes('height: clamp(360px, calc(100dvh - 260px), 680px);'), 'GigSongPanel.vue should size grids from the available viewport')
+  assert(source.includes('.songGridScroller thead th'), 'GigSongPanel.vue should keep table headers visible while scrolling')
   assert(source.includes('class="saveOrderButton"'), 'GigSongPanel.vue should render a styled bottom save button')
+}
+
+async function testGigSongPanelPreservesSelectionScrollAndDirtyState () {
+  const component = loadVueComponent('components/GigSongPanel.vue', {}, {})
+  const assignedScroller = { scrollTop: 140 }
+  const allSongsScroller = { scrollTop: 85 }
+  const context = makeComponentContext(component, {
+    gig: { id: 7, songList: [] },
+    gigSonglist: [{ id: 1 }, { id: 2 }, { id: 3 }],
+    allSongList: [{ id: 4 }],
+    selectedGigSongId: 2,
+    $refs: { assignedSongScroller: assignedScroller, allSongsScroller },
+    $nextTick: callback => callback()
+  })
+
+  context.moveSongUp(1)
+
+  assert.deepStrictEqual(context.gigSonglist.map(song => song.id), [2, 1, 3])
+  assert.strictEqual(context.selectedGigSongId, 2)
+  assert.strictEqual(assignedScroller.scrollTop, 140)
+  assert.strictEqual(allSongsScroller.scrollTop, 85)
+  assert.strictEqual(context.isDirty, true)
+  assert.deepStrictEqual(context.emitted.at(-1), { eventName: 'dirty-change', payload: true })
+
+  await context.saveOrder()
+
+  assert.strictEqual(context.isDirty, false)
+  assert.deepStrictEqual(context.emitted.at(-1), { eventName: 'dirty-change', payload: false })
+}
+
+function testGigSongPanelUsesDedicatedDragHandles () {
+  const source = readSrcFile('components/GigSongPanel.vue')
+
+  assert.strictEqual((source.match(/handle="\.songDragHandle"/g) || []).length, 2, 'Both song grids should drag only from a handle')
+  assert.strictEqual((source.match(/mdi-drag-vertical/g) || []).length, 2, 'Both song grids should show a drag handle icon')
+  assert(source.includes('touch-action: none;'), 'Drag handles should own their touch gesture')
+  assert(source.includes('Unsaved changes'), 'GigSongPanel.vue should show a dirty-state indicator')
+  assert(source.includes("$emit('request-close')"), 'GigSongPanel.vue should provide a guarded close action')
 }
 
 function testGigSongPanelAllocatesAfterSelectedSong () {
@@ -1952,6 +2030,7 @@ async function testPresetControlBusinessMethods () {
       volume: 80,
       pan: 64
     },
+    programIdx: 3,
     presetId: 2,
     midichannel: 6
   })
@@ -2022,7 +2101,14 @@ async function testPresetControlBusinessMethods () {
     type: 'updateSongProgramPreset',
     payload: context.songPreset
   })
-  assert.deepStrictEqual(context.emitted, [{ eventName: 'changed', payload: true }])
+  assert.notStrictEqual(context.dispatches.at(-2).payload, context.songPreset)
+  assert.deepStrictEqual(context.emitted, [{
+    eventName: 'changed',
+    payload: {
+      programIdx: 3,
+      preset: context.songPreset
+    }
+  }])
 }
 
 async function testGigControlPanelBusinessMethods () {
@@ -2085,6 +2171,14 @@ async function testGigControlPanelBusinessMethods () {
   assert.strictEqual(context.checkIfGigIsCurrent(), false)
   assert.strictEqual(context.checkVolumePedal1(0, 1), true)
   assert.strictEqual(context.checkVolumePedal2(0, 2), true)
+
+  context.OnControlDataChanged({
+    programIdx: 0,
+    preset: { id: '1', refsongprogram: '1', refinstrument: 1, refpreset: 9, volume: 77 }
+  })
+  assert.strictEqual(songA.programList[0].presetList[0].refpreset, 9)
+  assert.strictEqual(songA.programList[0].presetList[0].volume, 77)
+  assert.strictEqual(context.dataChanged, true)
 
   context.onProgramClick(3)
   context.selectSong()
@@ -2437,6 +2531,9 @@ function testMyKnobValueWatcherIsImmediateAndNormalizesValues () {
   }, {})
 
   assert.strictEqual(component.watch.value.immediate, true)
+  const source = readSrcFile('components/globals/MyKnob.vue')
+  assert(source.includes('@touchstart.prevent="moveStart"'), 'MyKnob.vue should capture touch before iPad scrolling starts')
+  assert(source.includes('touch-action: none;'), 'MyKnob.vue should reserve knob touch gestures for value changes')
 
   const context = makeComponentContext(component, {
     min: 0,
@@ -2449,6 +2546,9 @@ function testMyKnobValueWatcherIsImmediateAndNormalizesValues () {
 
   context.setCurrentValue(context.limitValue('200'), true)
   assert.strictEqual(context.currentValue, 127)
+
+  context.offset = 20
+  assert.strictEqual(context.getPos({ targetTouches: [{ clientX: 75 }] }), 55)
 }
 
 function testVueComponentsUseLengthProperty () {
@@ -2558,6 +2658,8 @@ function testPresetControlUsesCompactEffectToggleGrid () {
 
   assert(boostIndex > -1 && revIndex > boostIndex, 'PresetControl.vue should render Bst then Rev in the top row')
   assert(delIndex > revIndex && modIndex > delIndex, 'PresetControl.vue should render Del then Mod in the bottom row')
+  assert(presetControlSource.includes('.edit-mode .volumeControl'), 'PresetControl.vue should limit volume control spacing to edit mode')
+  assert(presetControlSource.includes('column-gap: 4px;'), 'PresetControl.vue should separate volume step buttons from the knob')
 }
 
 function testDeploymentEnablesLighttpdSpaFallback () {
@@ -2682,8 +2784,11 @@ async function run () {
     testGigPanelDialogSaveExistingGigAndSongs,
     testGigPanelRowSaveUpdatesExistingGigAndSongs,
     testGigPanelShowsFriendlyActionsAndSongCount,
+    testGigPanelGuardsClosingDirtySongEditor,
     testGigSongPanelSaveOrderShowsProgress,
     testGigSongPanelUsesScrollableSongGridsAndOrderColumn,
+    testGigSongPanelPreservesSelectionScrollAndDirtyState,
+    testGigSongPanelUsesDedicatedDragHandles,
     testGigSongPanelAllocatesAfterSelectedSong,
     testGigSongPanelUnallocatesAndMaintainsSelection,
     testGigSongPanelMovesSongsWithinGig,

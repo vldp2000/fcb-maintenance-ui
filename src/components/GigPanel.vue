@@ -17,6 +17,8 @@
           <div>
             <gig-song-panel
               :gig="selectedGig"
+              @dirty-change="songEditorDirty = $event"
+              @request-close="closeSongs"
             />
           </div>
         </td>
@@ -131,6 +133,7 @@ export default {
       singleExpand: true,
       savingGig: false,
       savingGigMessage: '',
+      songEditorDirty: false,
       headers: [
         {
           text: 'Name',
@@ -174,6 +177,14 @@ export default {
   watch: {
     dialog: function (val) {
       val || this.closeDialog()
+    }
+  },
+
+  beforeRouteLeave (to, from, next) {
+    if (this.confirmDiscardSongChanges()) {
+      next()
+    } else {
+      next(false)
     }
   },
 
@@ -263,11 +274,30 @@ export default {
     },
 
     openSongs (gig) {
+      if (this.expanded.length && this.expanded[0].id === gig.id) {
+        return
+      }
+      if (this.expanded.length && this.expanded[0].id !== gig.id && !this.confirmDiscardSongChanges()) {
+        return
+      }
       if (!gig.songList) {
         gig.songList = []
       }
       this.selectedGig = gig
       this.expanded = [gig]
+      this.songEditorDirty = false
+    },
+
+    confirmDiscardSongChanges () {
+      return !this.songEditorDirty || confirm('Discard unsaved changes to this gig song list?')
+    },
+
+    closeSongs () {
+      if (!this.confirmDiscardSongChanges()) return false
+      this.expanded = []
+      this.selectedGig = []
+      this.songEditorDirty = false
+      return true
     },
 
     async rowClicked (value) {
@@ -275,18 +305,20 @@ export default {
       let oldGigId = -1
       if (this.expanded.length === 1) {
         oldGigId = this.expanded[0].id
-        this.expanded.pop()
       }
       // this.$log.debug(value)
       if (oldGigId === value.id) {
+        this.closeSongs()
         return
       }
+      if (oldGigId !== -1 && !this.confirmDiscardSongChanges()) return
       if (!value.songList) {
         value.songList = []
       }
       // this.$log.debug('expand ----')
       this.selectedGig = value
-      this.expanded.push(value)
+      this.expanded = [value]
+      this.songEditorDirty = false
     }
   }
 }

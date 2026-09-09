@@ -37,12 +37,15 @@ const mutations = {
     if (song && !song.programList) Vue.set(song, 'programList', songPrograms.programs)
   },
   [types.UPDATE_SONGPROGRAMPRESET] (state, payload) {
-    const song = state.songList.find(song => song.id === payload.refsong)
-    const program = song && song.programList.find(program => program.id === payload.refsongprogram)
-    const preset = program && program.presetList.find(preset => preset.id === payload.id)
+    const sameId = (left, right) => String(left) === String(right)
+    const song = state.songList.find(song => sameId(song.id, payload.refsong))
+    const program = song && song.programList.find(program => sameId(program.id, payload.refsongprogram))
+    const preset = program && program.presetList.find(preset => sameId(preset.id, payload.id))
     if (!preset) return
     Object.assign(preset, {
       refpreset: payload.refpreset,
+      refinstrument: payload.refinstrument,
+      refinstrumentbank: payload.refinstrumentbank,
       volume: payload.volume,
       pan: payload.pan,
       muteflag: payload.muteflag,

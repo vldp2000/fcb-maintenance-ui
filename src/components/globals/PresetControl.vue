@@ -439,10 +439,13 @@ export default {
       }
     },
     saveSongPreset () {
-      // this.$log.debug(this.songPreset)
-      this.$store.dispatch('updateSongProgramPreset', this.songPreset)
+      const preset = Object.assign({}, this.songPreset)
+      this.$store.dispatch('updateSongProgramPreset', preset)
       this.setEditMode(false)
-      this.$emit('changed', true)
+      this.$emit('changed', {
+        programIdx: this.programIdx,
+        preset
+      })
     },
     onIconClick () {
       this.setEditMode(!this.editMode)
@@ -489,6 +492,9 @@ export default {
   .volumeControl {
     display: flex;
     align-items: flex-start;
+  }
+  .edit-mode .volumeControl {
+    column-gap: 4px;
   }
   .volumeControl .customKnob {
     margin-right: 0;
