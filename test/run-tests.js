@@ -1707,7 +1707,11 @@ function testGigSongPanelUsesScrollableSongGridsAndOrderColumn () {
   assert(source.includes('v-for="(item, index) in gigSonglist"'), 'GigSongPanel.vue should calculate order from the selected song position')
   assert(source.includes('{{ index + 1 }}'), 'GigSongPanel.vue should render one-based order numbers')
   assert(source.includes('class="songGridScroller"'), 'GigSongPanel.vue should wrap both song grids in independent scrollers')
-  assert(source.includes('overflow-y: auto;'), 'GigSongPanel.vue should make the song grids independently scrollable')
+  assert(source.includes('min-height: 0;'), 'GigSongPanel.vue should allow flex grid scrollers to shrink below table height')
+  assert(source.includes('overflow-y: scroll;'), 'GigSongPanel.vue should give both song grids vertical scroll areas')
+  assert(source.includes('-webkit-overflow-scrolling: touch;'), 'GigSongPanel.vue should enable momentum scrolling on iPad')
+  assert(source.includes('touch-action: pan-y;'), 'GigSongPanel.vue should preserve vertical touch gestures')
+  assert.strictEqual((source.match(/:delay-on-touch-only="true"/g) || []).length, 2, 'Both song grids should distinguish touch scrolling from dragging')
   assert(source.includes('class="saveOrderButton"'), 'GigSongPanel.vue should render a styled bottom save button')
 }
 

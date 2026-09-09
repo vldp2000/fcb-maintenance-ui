@@ -28,6 +28,9 @@
                 v-model="gigSonglist"
                 tag="tbody"
                 group="songs"
+                :delay="180"
+                :delay-on-touch-only="true"
+                :touch-start-threshold="8"
                 @change="syncSelectedSong"
               >
                 <tr
@@ -90,6 +93,9 @@
                 v-model="allSongList"
                 tag="tbody"
                 group="songs"
+                :delay="180"
+                :delay-on-touch-only="true"
+                :touch-start-threshold="8"
               >
                 <tr v-for="item in allSongList" :key="item.id" @dblclick="allocateSong(item)">
                   <td class="allocateColumn">
@@ -302,10 +308,26 @@ export default {
   }
   .songGridScroller {
     flex: 1;
-    overflow-y: auto;
+    min-height: 0;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior-y: contain;
+    scrollbar-gutter: stable;
     border: 1px solid #d7dce8;
     border-radius: 4px;
     background: #fff;
+  }
+  .songGridScroller::-webkit-scrollbar {
+    width: 12px;
+  }
+  .songGridScroller::-webkit-scrollbar-track {
+    background: #eef1f7;
+  }
+  .songGridScroller::-webkit-scrollbar-thumb {
+    background: #7e8aa8;
+    border: 2px solid #eef1f7;
+    border-radius: 8px;
   }
   .songGridActions {
     position: sticky;
