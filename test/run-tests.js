@@ -2663,6 +2663,8 @@ function testPresetControlUsesCompactEffectToggleGrid () {
   assert(presetControlSource.includes('margin-right: 8px;'), 'PresetControl.vue should separate volume controls from the pan knob')
   assert(presetControlSource.includes('width: 40px;'), 'PresetControl.vue should provide finger-sized square volume buttons')
   assert(presetControlSource.includes('height: 40px;'), 'PresetControl.vue volume buttons should be square')
+  assert(presetControlSource.indexOf('class="presetSaveButton"') > presetControlSource.indexOf('class="presetName"'), 'PresetControl.vue should place Save at the far end of the preset header')
+  assert(presetControlSource.includes('flex: 0 0 40px;'), 'PresetControl.vue should give Save a finger-sized touch target')
 }
 
 function testDeploymentEnablesLighttpdSpaFallback () {

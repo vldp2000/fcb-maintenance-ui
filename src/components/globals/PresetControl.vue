@@ -8,20 +8,20 @@
         <div class="instrumentImage">
           <v-img class="instrumentIconImage" :src="imageURL" contain @click="onIconClick()"/>
         </div>
-        <div class="saveSongPreset()">
-          <v-icon
-            v-if="editMode"
-            class="mr-2 ma-0 pa-0"
-            @click="saveSongPreset()"
-          >
-          save
-          </v-icon>
-        </div>
         <div class="presetName"
           v-bind:class="(volume > 0) ? 'active' : 'inactive'"
           @click="onPresetClick()">
           <b>{{ getPresetName() }}</b>
         </div>
+        <button
+          v-if="editMode"
+          type="button"
+          class="presetSaveButton"
+          aria-label="Save preset changes"
+          @click.stop="saveSongPreset()"
+        >
+          <v-icon>save</v-icon>
+        </button>
       </div>
 
       <v-row no-gutters>
@@ -541,6 +541,8 @@ export default {
   }
   .presetHeader .presetName {
     display: flex;
+    flex: 1;
+    min-width: 0;
     margin: 0px;
     padding: 0px;
     padding-top: 10px;
@@ -550,6 +552,22 @@ export default {
     align-items: flex-start;
     flex-direction: column;
     height: 40px;
+  }
+  .presetSaveButton {
+    display: flex;
+    flex: 0 0 40px;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin-left: 12px;
+    padding: 0;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+    touch-action: manipulation;
   }
   .effectToggleGrid {
     display: grid;
