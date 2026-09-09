@@ -2667,6 +2667,16 @@ function testPresetControlUsesCompactEffectToggleGrid () {
   assert(presetControlSource.includes('flex: 0 0 40px;'), 'PresetControl.vue should give Save a finger-sized touch target')
 }
 
+function testCurrentBuildAssetsReplaceStaleInstrumentIcons () {
+  const mutationsSource = readSrcFile('store/mutations.js')
+  const gigControlSource = readSrcFile('components/GigControlPanel.vue')
+
+  assert(mutationsSource.includes("if (instrument) Vue.set(instrument, 'imageURL', item.url)"), 'Instrument images should replace stale build-hashed URLs')
+  assert(!mutationsSource.includes('instrument && !instrument.imageURL'), 'Existing stale instrument image URLs should not be retained')
+  assert(gigControlSource.includes('.currentSongNavButton .v-icon'), 'Song navigation icon color should be styled explicitly')
+  assert(gigControlSource.includes('color: inherit;'), 'Song navigation icons should inherit the visible button color')
+}
+
 function testDeploymentEnablesLighttpdSpaFallback () {
   const deployScript = fs.readFileSync(path.join(rootDir, 'deployment/deploy-to-rpi.sh'), 'utf8')
   const fallbackConfig = fs.readFileSync(path.join(rootDir, 'deployment/lighttpd-spa-fallback.conf'), 'utf8')
@@ -2820,6 +2830,7 @@ async function run () {
     testModulationEffectIsLabeledModInLiveUi,
     testBoostFlagReplacesMuteInPresetUi,
     testPresetControlUsesCompactEffectToggleGrid,
+    testCurrentBuildAssetsReplaceStaleInstrumentIcons,
     testDeploymentEnablesLighttpdSpaFallback,
     testLiveSelectionUsesBlurredGradientShadow,
     testMetronomeUsesSongBpmForBlinkInterval,

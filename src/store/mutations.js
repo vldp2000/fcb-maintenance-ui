@@ -74,7 +74,9 @@ const mutations = {
   [types.SET_INSTRUMENT_IMAGE] (state, payload) {
     payload.forEach(item => {
       const instrument = state.instrumentList.find(instrument => instrument.id === item.id)
-      if (instrument && !instrument.imageURL) Vue.set(instrument, 'imageURL', item.url)
+      // imageURL values persisted by older UI builds contain obsolete asset hashes.
+      // Always replace them with the URL generated for the currently running bundle.
+      if (instrument) Vue.set(instrument, 'imageURL', item.url)
     })
   },
   [types.SET_PRESETLIST] (state, presetList) {

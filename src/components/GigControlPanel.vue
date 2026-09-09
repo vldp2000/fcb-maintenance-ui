@@ -926,6 +926,9 @@ export default {
   border-radius: 10px;
   cursor: pointer;
 }
+.currentSongNavButton .v-icon {
+  color: inherit;
+}
 .currentSongNavButton:hover {
   color: #ffffff;
   border-color: #0b3f9f;
