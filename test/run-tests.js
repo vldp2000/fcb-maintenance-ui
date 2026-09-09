@@ -2659,7 +2659,10 @@ function testPresetControlUsesCompactEffectToggleGrid () {
   assert(boostIndex > -1 && revIndex > boostIndex, 'PresetControl.vue should render Bst then Rev in the top row')
   assert(delIndex > revIndex && modIndex > delIndex, 'PresetControl.vue should render Del then Mod in the bottom row')
   assert(presetControlSource.includes('.edit-mode .volumeControl'), 'PresetControl.vue should limit volume control spacing to edit mode')
-  assert(presetControlSource.includes('column-gap: 4px;'), 'PresetControl.vue should separate volume step buttons from the knob')
+  assert(presetControlSource.includes('column-gap: 8px;'), 'PresetControl.vue should separate volume step buttons from the knob')
+  assert(presetControlSource.includes('margin-right: 8px;'), 'PresetControl.vue should separate volume controls from the pan knob')
+  assert(presetControlSource.includes('width: 40px;'), 'PresetControl.vue should provide finger-sized square volume buttons')
+  assert(presetControlSource.includes('height: 40px;'), 'PresetControl.vue volume buttons should be square')
 }
 
 function testDeploymentEnablesLighttpdSpaFallback () {

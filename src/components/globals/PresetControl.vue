@@ -33,7 +33,7 @@
             :disabled="volume <= 0"
             aria-label="Decrease volume by 5"
             @click="adjustVolume(-5)"
-          ><v-icon small>mdi-chevron-double-left</v-icon></button>
+          ><v-icon>mdi-chevron-double-left</v-icon></button>
           <div class="customKnob">
             <my-knob
               v-model='volume'
@@ -51,7 +51,7 @@
             :disabled="volume >= 127"
             aria-label="Increase volume by 5"
             @click="adjustVolume(5)"
-          ><v-icon small>mdi-chevron-double-right</v-icon></button>
+          ><v-icon>mdi-chevron-double-right</v-icon></button>
         </div>
         <div class="customKnob">
           <my-knob
@@ -494,22 +494,23 @@ export default {
     align-items: flex-start;
   }
   .edit-mode .volumeControl {
-    column-gap: 4px;
+    column-gap: 8px;
+    margin-right: 8px;
   }
   .volumeControl .customKnob {
     margin-right: 0;
   }
   .volumeStepButton {
-    width: 22px;
-    min-width: 22px;
-    height: 32px;
-    margin-top: 18px;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    margin-top: 14px;
     padding: 0;
     color: #e3f2fd;
     background-color: rgba(11, 63, 159, 0.72);
     border: 1px solid rgba(144, 202, 249, 0.76);
-    border-radius: 4px;
-    font-size: 10px;
+    border-radius: 6px;
+    font-size: 16px;
     font-weight: bold;
     cursor: pointer;
   }
