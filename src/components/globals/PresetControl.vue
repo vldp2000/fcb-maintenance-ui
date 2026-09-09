@@ -25,15 +25,33 @@
       </div>
 
       <v-row no-gutters>
-        <div class="customKnob">
-          <my-knob
-            v-model='volume'
-            :editMode='editMode'
-            :activeVolumePedal='activeVolumePedal'
-            knobLabel='Vol'
-            :base-color='getBaseColor()'
-            @doubleclick="onVolumeKnobDoubleClick()"
-          />
+        <div class="volumeControl">
+          <button
+            v-if="editMode"
+            type="button"
+            class="volumeStepButton"
+            :disabled="volume <= 0"
+            aria-label="Decrease volume by 5"
+            @click="adjustVolume(-5)"
+          >&lt;&lt;</button>
+          <div class="customKnob">
+            <my-knob
+              v-model='volume'
+              :editMode='editMode'
+              :activeVolumePedal='activeVolumePedal'
+              knobLabel='Vol'
+              :base-color='getBaseColor()'
+              @doubleclick="onVolumeKnobDoubleClick()"
+            />
+          </div>
+          <button
+            v-if="editMode"
+            type="button"
+            class="volumeStepButton"
+            :disabled="volume >= 127"
+            aria-label="Increase volume by 5"
+            @click="adjustVolume(5)"
+          >&gt;&gt;</button>
         </div>
         <div class="customKnob">
           <my-knob
@@ -317,6 +335,12 @@ export default {
       // }
     },
 
+    adjustVolume (step) {
+      if (!this.editMode) return
+      const currentVolume = Number(this.songPreset.volume) || 0
+      this.setVolume(Math.max(0, Math.min(127, currentVolume + step)))
+    },
+
     getDefaultSongPreset () {
       return {
         id: -1,
@@ -461,6 +485,33 @@ export default {
   }
   .customKnob:first-child {
     margin-left: 9px;
+  }
+  .volumeControl {
+    display: flex;
+    align-items: flex-start;
+  }
+  .volumeControl .customKnob {
+    margin-right: 0;
+  }
+  .volumeStepButton {
+    width: 22px;
+    min-width: 22px;
+    height: 32px;
+    margin-top: 18px;
+    padding: 0;
+    color: #e3f2fd;
+    background-color: rgba(11, 63, 159, 0.72);
+    border: 1px solid rgba(144, 202, 249, 0.76);
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .volumeStepButton:disabled {
+    color: #607d8b;
+    background-color: rgba(38, 50, 56, 0.72);
+    border-color: #455a64;
+    cursor: default;
   }
   .customControls {
     height: 60px;

@@ -1964,6 +1964,19 @@ async function testPresetControlBusinessMethods () {
 
   context.setVolume(72)
   assert.strictEqual(context.songPreset.volume, 72)
+  context.editMode = true
+  context.adjustVolume(-5)
+  assert.strictEqual(context.songPreset.volume, 67)
+  context.songPreset.volume = 125
+  context.adjustVolume(5)
+  assert.strictEqual(context.songPreset.volume, 127)
+  context.songPreset.volume = 3
+  context.adjustVolume(-5)
+  assert.strictEqual(context.songPreset.volume, 0)
+  context.editMode = false
+  context.adjustVolume(5)
+  assert.strictEqual(context.songPreset.volume, 0)
+  context.setVolume(72)
   assert.strictEqual(context.getPresetName(), 'B Preset')
   assert.strictEqual(context.getBaseColor(), 'snow')
 
