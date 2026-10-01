@@ -15,7 +15,6 @@ import MyKnob from '@/components/globals/MyKnob'
 import PresetControl from '@/components/globals/PresetControl'
 import MobilePresetControl from '@/components/globals/MobilePresetControl'
 import CustomTextInput from '@/components/globals/CustomTextInput'
-import 'material-design-icons-iconfont/dist/material-design-icons.css'
 import VueSvgGauge from 'vue-svg-gauge'
 import Vue2TouchEvents from 'vue2-touch-events'
 

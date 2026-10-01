@@ -125,7 +125,7 @@
           class="rowActionButton mr-1"
           @click.stop="editItem(item)"
         >
-          <v-icon small left>edit</v-icon>
+          <v-icon small left>mdi-pencil</v-icon>
           Edit
         </v-btn>
       </template>
@@ -138,7 +138,7 @@
           class="rowActionButton mr-1"
           @click.stop="saveSong(item)"
         >
-          <v-icon small left>save</v-icon>
+          <v-icon small left>mdi-content-save</v-icon>
           Save
         </v-btn>
       </template>

@@ -84,7 +84,7 @@
           class="rowActionButton mr-1"
           @click.stop="openSongs(item)"
         >
-          <v-icon small left>queue_music</v-icon>
+          <v-icon small left>mdi-playlist-music</v-icon>
           Songs
         </v-btn>
       </template>
@@ -96,7 +96,7 @@
           class="rowActionButton mr-1"
           @click.stop="editItem(item)"
         >
-          <v-icon small left>edit</v-icon>
+          <v-icon small left>mdi-pencil</v-icon>
           Edit
         </v-btn>
       </template>
@@ -108,7 +108,7 @@
           class="rowActionButton mr-1"
           @click.stop="saveGigRow(item)"
         >
-          <v-icon small left>save</v-icon>
+          <v-icon small left>mdi-content-save</v-icon>
           Save
         </v-btn>
       </template>

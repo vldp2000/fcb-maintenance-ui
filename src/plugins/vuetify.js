@@ -1,11 +1,12 @@
 import Vue from 'vue'
 import Vuetify from 'vuetify/lib'
-import '@mdi/font/css/materialdesignicons.css' // Ensure you are using css-loader
+// Bundle the icon font so the controller can serve it without an internet connection.
+import '@mdi/font/css/materialdesignicons.css'
 
 Vue.use(Vuetify)
 
 export default new Vuetify({
   icons: {
-    iconfont: 'mdi' // default - only for display purposes
+    iconfont: 'mdi'
   }
 })

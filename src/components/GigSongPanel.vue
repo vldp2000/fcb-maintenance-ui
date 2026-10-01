@@ -79,7 +79,7 @@
               :disabled="savingOrder"
               @click="saveOrder"
             >
-              <v-icon left>save</v-icon>
+              <v-icon left>mdi-content-save</v-icon>
               Save Gig
             </v-btn>
           </div>

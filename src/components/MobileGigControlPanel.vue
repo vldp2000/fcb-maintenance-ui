@@ -29,7 +29,7 @@
           <v-icon large class="selectSongButton"
             @click="selectSong()"
           >
-          settings_remote
+          mdi-remote
           </v-icon>
         </div>
       </v-col>

@@ -23,12 +23,12 @@
             v-bind:class="(checkIfGigIsCurrent()) ? 'defaultGigHighighted' : 'defaultGig'"
             @click="saveGigAsCurrent()"
           >
-          grade
+          mdi-star
           </v-icon>
           <v-icon large class="clearGigBbutton"
             @click="clearGig()"
           >
-          cancel
+          mdi-close-circle
           </v-icon>
         </div>
       </v-col>
@@ -65,20 +65,20 @@
             :disabled="currentSongId <= 0"
             @click="openHistory()"
           >
-            <v-icon small left>history</v-icon>
+            <v-icon small left>mdi-history</v-icon>
             History
           </v-btn>
           <v-icon medium
             v-bind:class="(dataChanged) ? 'songActionButtonActive saveSongButtonHighighted' : 'songActionButtonInactive saveSongButton'"
             @click="saveSong()"
           >
-          save
+          mdi-content-save
           </v-icon>
           <v-icon medium
             v-bind:class="(songReloadPending) ? 'songActionButtonActive selectSongButtonHighighted' : 'songActionButtonInactive selectSongButton'"
             @click="selectSong()"
           >
-          settings_remote
+          mdi-remote
           </v-icon>
         </div>
       </v-col>
@@ -90,7 +90,7 @@
         <div class="songPickerCaption">Select Song</div>
         <div class="songPickerTitle">{{ songPickerSongs.length }} Songs</div>
       </div>
-      <v-icon class="songPickerClose" @click="closeSongPicker()">close</v-icon>
+      <v-icon class="songPickerClose" @click="closeSongPicker()">mdi-close</v-icon>
     </div>
     <div class="songPickerGrid songPickerGridHeader">
       <div>ID</div>

@@ -76,7 +76,7 @@
               class="mr-2"
               @click="editItem(item)"
             >
-              edit
+              mdi-pencil
             </v-icon>
           </template>
         </v-data-table>

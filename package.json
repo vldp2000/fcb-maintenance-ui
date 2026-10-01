@@ -1,6 +1,6 @@
 {
   "name": "maintenance",
-  "version": "2.1.37",
+  "version": "2.1.38",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -15,7 +15,6 @@
     "axios": "^1.20.0",
     "core-js": "^3.24.1",
     "lodash": "^4.18.1",
-    "material-design-icons-iconfont": "^5.0.1",
     "register-service-worker": "^1.7.2",
     "socket.io-client": "^4.8.3",
     "vue": "^2.7.16",

@@ -20,7 +20,7 @@
           aria-label="Save preset changes"
           @click.stop="saveSongPreset()"
         >
-          <v-icon>save</v-icon>
+          <v-icon>mdi-content-save</v-icon>
         </button>
       </div>
 
@@ -130,7 +130,7 @@
                   :disabled="!selectedPreset"
                   @click="showPresetUsage()"
                 >
-                  <v-icon left small>format_list_bulleted</v-icon>
+                  <v-icon left small>mdi-format-list-bulleted</v-icon>
                   Used In
                 </v-btn>
 
@@ -147,7 +147,7 @@
           <v-dialog v-if="editMode" v-model="usageDialog" max-width="760px">
             <v-card>
               <v-card-title class="headline">
-                <v-icon left>format_list_bulleted</v-icon>
+                <v-icon left>mdi-format-list-bulleted</v-icon>
                 Preset Usage
               </v-card-title>
               <v-card-text>

@@ -10,7 +10,7 @@
         class="playButton"
         v-bind:class="getMetronomeColor()"
       >
-        {{ running ? 'fiber_manual_record' : 'play_circle_outline' }}
+        {{ running ? 'mdi-record' : 'mdi-play-circle-outline' }}
       </v-icon>
     </button>
   </v-container>
