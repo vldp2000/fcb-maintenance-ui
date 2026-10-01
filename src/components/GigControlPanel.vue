@@ -58,15 +58,16 @@
        <v-col cols="12" md="2">
         <div class="songActionPanel">
           <v-btn
-            small
+            icon
             outlined
             color="light-blue lighten-2"
             class="historyButton"
+            aria-label="Song preset history"
+            title="Song preset history"
             :disabled="currentSongId <= 0"
             @click="openHistory()"
           >
-            <v-icon small left>mdi-history</v-icon>
-            History
+            <v-icon>mdi-history</v-icon>
           </v-btn>
           <v-icon medium
             v-bind:class="(dataChanged) ? 'songActionButtonActive saveSongButtonHighighted' : 'songActionButtonInactive saveSongButton'"
@@ -1089,11 +1090,12 @@ export default {
   align-items: flex-start;
   justify-content: flex-start;
   gap: 6px;
-  min-width: 218px;
 }
 .historyButton {
+  width: 44px;
   height: 48px !important;
   margin-top: 1px;
+  border-radius: 10px;
 }
 .songActionButtonInactive,
 .songActionButtonActive {
