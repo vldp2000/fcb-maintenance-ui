@@ -429,7 +429,7 @@ export default {
     currentSongDisplay: {
       get () {
         if (!this.currentSong) return 'No song selected'
-        const tempo = this.currentSong.tempo ? ` / ${this.currentSong.tempo} BPM` : ''
+        const tempo = this.currentSong.tempo ? ` (${this.currentSong.tempo})` : ''
         return `${this.currentSong.id}. ${this.currentSong.name}${tempo}`
       }
     },
